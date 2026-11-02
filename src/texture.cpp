@@ -10,7 +10,7 @@
 #include <cmath>
 
 namespace renderer {
-    void textures::createTexture(texture& tex) {
+    void createTexture(texture& tex) {
         createTextureImage(tex);
         createTextureImageView(tex);
         createTextureSampler(tex);
@@ -18,7 +18,7 @@ namespace renderer {
         textures.push_back(tex);
     }
 
-    void textures::createTextureImage(texture& tex) {
+    void createTextureImage(texture& tex) {
         int texWidth, texHeight, texChannels;
         stbi_uc* pixels = stbi_load(tex.path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
         VkDeviceSize imageSize = texWidth * texHeight * 4;
@@ -51,7 +51,7 @@ namespace renderer {
         generateMipmaps(tex.textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, tex.mipLevels);
     }
 
-    void textures::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
+    void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
         // Check if image format supports linear blitting
         VkFormatProperties formatProperties;
         vkGetPhysicalDeviceFormatProperties(vulkan::physicalDevice.get(), imageFormat, &formatProperties);
@@ -138,11 +138,11 @@ namespace renderer {
         vulkan::commandBuffer.endSingleTimeCommands(commandBuffer);
     }
 
-    void textures::createTextureImageView(texture& tex) {
+    void createTextureImageView(texture& tex) {
         tex.textureImageView = vulkan::imageViews.createImageView(tex.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, tex.mipLevels);
     }
 
-    void textures::createTextureSampler(texture& tex) {
+    void createTextureSampler(texture& tex) {
         VkPhysicalDeviceProperties properties{};
         vkGetPhysicalDeviceProperties(vulkan::physicalDevice.get(), &properties);
 

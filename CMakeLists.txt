@@ -63,6 +63,12 @@ add_executable(renderer
     src/buffer.cpp
     src/command_buffer.cpp
     src/command_buffer.hpp
+    src/model.hpp
+    src/model.cpp
+    src/vertex_buffer.hpp
+    src/vertex_buffer.cpp
+    src/index_buffer.cpp
+    src/index_buffer.hpp
 )
 
 target_link_libraries(renderer PRIVATE

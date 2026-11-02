@@ -16,7 +16,6 @@
 #include "resources.hpp"
 #include "framebuffers.hpp"
 #include "buffer.hpp"
-#include "texture.hpp"
 
 class vulkan {
     public:
@@ -34,7 +33,6 @@ class vulkan {
     inline static renderer::image image;
     inline static renderer::resources resources;
     inline static renderer::framebuffers framebuffers;
-    inline static renderer::textures textures;
     inline static renderer::buffer buffer;
     inline static renderer::commandBuffer commandBuffer;
     inline static renderer::queues queues{};

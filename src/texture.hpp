@@ -18,13 +18,10 @@ namespace renderer {
         std::string path;
     };
 
-    class textures {
-        public:
-        std::vector<texture> textures;
-        void createTextureImage(texture& tex);
-        void createTextureImageView(texture& tex);
-        void createTextureSampler(texture& tex);
-        void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-        void createTexture(texture& tex);
-    };
+    inline std::vector<texture> textures;
+    void createTextureImage(texture& tex);
+    void createTextureImageView(texture& tex);
+    void createTextureSampler(texture& tex);
+    void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+    void createTexture(texture& tex);
 }

@@ -1,3 +1,4 @@
+#include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -8,9 +9,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
 
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
-
 #include <iostream>
 #include <stdexcept>
 #include <chrono>
@@ -19,7 +17,6 @@
 #include <cstdlib>
 #include <cstdint>
 #include <array>
-#include <unordered_map>
 #include <cassert>
 
 #include "validation_layers.hpp"
@@ -33,6 +30,7 @@
 #include "render_pass.hpp"
 #include "vertex.hpp"
 #include "texture.hpp"
+#include "model.hpp"
 
 const std::string MODEL_PATH = "assets/models/viking_room.obj";
 
@@ -53,13 +51,6 @@ public:
     }
 
 private:
-    std::vector<Vertex> vertices;
-    std::vector<uint32_t> indices;
-    VkBuffer vertexBuffer;
-    VkDeviceMemory vertexBufferMemory;
-    VkBuffer indexBuffer;
-    VkDeviceMemory indexBufferMemory;
-
     std::vector<VkBuffer> uniformBuffers;
     std::vector<VkDeviceMemory> uniformBuffersMemory;
     std::vector<void*> uniformBuffersMapped;
@@ -90,13 +81,18 @@ private:
         vulkan::resources.createDepthResources();
         vulkan::framebuffers.createFramebuffers();
 
-        renderer::texture modelTexture;
-        modelTexture.path = "assets/textures/viking_room.png";
+        renderer::texture vikingRoomTexture;
+        vikingRoomTexture.path = "assets/textures/viking_room.png";
 
-        vulkan::textures.createTexture(modelTexture);
-        loadModel();
-        createVertexBuffer();
-        createIndexBuffer();
+        renderer::createTexture(vikingRoomTexture);
+        
+        renderer::mesh vikingRoom;
+        vikingRoom.path = "assets/models/viking_room.obj";
+    
+        renderer::createModel(vikingRoom);
+
+        renderer::meshes.push_back(vikingRoom);
+
         createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
@@ -147,7 +143,7 @@ private:
 
         vkDestroyDescriptorPool(vulkan::logicalDevice.get(), descriptorPool, nullptr);
 
-        for (const renderer::texture& tex : vulkan::textures.textures) {
+        for (const renderer::texture& tex : renderer::textures) {
 
             vkDestroySampler(vulkan::logicalDevice.get(), tex.textureSampler, nullptr);
             vkDestroyImageView(vulkan::logicalDevice.get(), tex.textureImageView, nullptr);
@@ -159,11 +155,15 @@ private:
 
         vkDestroyDescriptorSetLayout(vulkan::logicalDevice.get(), vulkan::descriptorSetLayout.get(), nullptr);
 
-        vkDestroyBuffer(vulkan::logicalDevice.get(), indexBuffer, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), indexBufferMemory, nullptr);
+        for (const renderer::mesh& model : renderer::meshes) {
 
-        vkDestroyBuffer(vulkan::logicalDevice.get(), vertexBuffer, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), vertexBufferMemory, nullptr);
+            vkDestroyBuffer(vulkan::logicalDevice.get(), model.indexBuffer, nullptr);
+            vkFreeMemory(vulkan::logicalDevice.get(), model.indexBufferMemory, nullptr);
+
+            vkDestroyBuffer(vulkan::logicalDevice.get(), model.vertexBuffer, nullptr);
+            vkFreeMemory(vulkan::logicalDevice.get(), model.vertexBufferMemory, nullptr);
+
+        }
 
         for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
             vkDestroySemaphore(vulkan::logicalDevice.get(), renderFinishedSemaphores[i], nullptr);
@@ -207,93 +207,6 @@ private:
 
     bool hasStencilComponent(VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-    }
-
-    void loadModel() {
-        tinyobj::attrib_t attrib;
-        std::vector<tinyobj::shape_t> shapes;
-        std::vector<tinyobj::material_t> materials;
-        std::string err;
-        std::string warn;
-
-        if (!tinyobj::LoadObj(
-            &attrib,
-            &shapes,
-            &materials,
-            &warn,
-            &err,
-            MODEL_PATH.c_str()
-        )) {
-            throw std::runtime_error(warn + err);
-        }
-
-        std::unordered_map<Vertex, uint32_t> uniqueVertices{};
-
-        for (const auto& shape : shapes) {
-            for (const auto& index : shape.mesh.indices) {
-                Vertex vertex{};
-
-                vertex.pos = {
-                    attrib.vertices[3 * index.vertex_index + 0],
-                    attrib.vertices[3 * index.vertex_index + 1],
-                    attrib.vertices[3 * index.vertex_index + 2]
-                };
-
-                vertex.texCoord = {
-                    attrib.texcoords[2 * index.texcoord_index + 0],
-                    1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
-                };
-
-                vertex.color = {1.0f, 1.0f, 1.0f};
-
-                if (uniqueVertices.count(vertex) == 0) {
-                    uniqueVertices[vertex] = static_cast<uint32_t>(vertices.size());
-                    vertices.push_back(vertex);
-                }
-
-                indices.push_back(uniqueVertices[vertex]);
-            }
-        }
-    }
-
-    void createVertexBuffer() {
-        VkDeviceSize bufferSize = sizeof(vertices[0]) * vertices.size();
-
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(vulkan::logicalDevice.get(), stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, vertices.data(), (size_t) bufferSize);
-        vkUnmapMemory(vulkan::logicalDevice.get(), stagingBufferMemory);
-
-        vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, vertexBuffer, vertexBufferMemory);
-
-        copyBuffer(stagingBuffer, vertexBuffer, bufferSize);
-
-        vkDestroyBuffer(vulkan::logicalDevice.get(), stagingBuffer, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), stagingBufferMemory, nullptr);
-    }
-
-    void createIndexBuffer() {
-        VkDeviceSize bufferSize = sizeof(indices[0]) * indices.size();
-
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-        void* data;
-        vkMapMemory(vulkan::logicalDevice.get(), stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, indices.data(), (size_t) bufferSize);
-        vkUnmapMemory(vulkan::logicalDevice.get(), stagingBufferMemory);
-
-        vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, indexBuffer, indexBufferMemory);
-
-        copyBuffer(stagingBuffer, indexBuffer, bufferSize);
-
-        vkDestroyBuffer(vulkan::logicalDevice.get(), stagingBuffer, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), stagingBufferMemory, nullptr);
     }
 
     void createUniformBuffers() {
@@ -351,7 +264,7 @@ private:
             throw std::runtime_error("failed to allocate descriptor sets!");
         }
 
-        const auto& textures = vulkan::textures.textures;
+        const auto& textures = renderer::textures;
 
         std::vector<VkDescriptorImageInfo> imageInfos;
         imageInfos.reserve(textures.size());
@@ -406,16 +319,6 @@ private:
         }
     }
 
-    void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-        VkCommandBuffer commandBuffer = vulkan::commandBuffer.beginSingleTimeCommands();
-
-        VkBufferCopy copyRegion{};
-        copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-        vulkan::commandBuffer.endSingleTimeCommands(commandBuffer);
-    }
-
     void createCommandBuffers() {
         commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
 
@@ -429,6 +332,8 @@ private:
             throw std::runtime_error("failed to allocate command buffers!");
         }
     }
+
+
 
     void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex) {
         VkCommandBufferBeginInfo beginInfo{};
@@ -454,31 +359,65 @@ private:
 
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan::graphicsPipeline.get());
+        vkCmdBindPipeline(
+            commandBuffer,
+            VK_PIPELINE_BIND_POINT_GRAPHICS,
+            vulkan::graphicsPipeline.get()
+        );
 
-            VkViewport viewport{};
-            viewport.x = 0.0f;
-            viewport.y = 0.0f;
-            viewport.width = (float) vulkan::swapchain.getExtent().width;
-            viewport.height = (float) vulkan::swapchain.getExtent().height;
-            viewport.minDepth = 0.0f;
-            viewport.maxDepth = 1.0f;
-            vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
+        VkViewport viewport{};
+        viewport.x = 0.0f;
+        viewport.y = 0.0f;
+        viewport.width = static_cast<float>(vulkan::swapchain.getExtent().width);
+        viewport.height = static_cast<float>(vulkan::swapchain.getExtent().height);
+        viewport.minDepth = 0.0f;
+        viewport.maxDepth = 1.0f;
 
-            VkRect2D scissor{};
-            scissor.offset = {0, 0};
-            scissor.extent = vulkan::swapchain.getExtent();
-            vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+        vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
 
-            VkBuffer vertexBuffers[] = {vertexBuffer};
+        VkRect2D scissor{};
+        scissor.offset = {0, 0};
+        scissor.extent = vulkan::swapchain.getExtent();
+
+        vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+
+        for (const auto& mesh : renderer::meshes) {
+            VkBuffer vertexBuffers[] = {mesh.vertexBuffer};
             VkDeviceSize offsets[] = {0};
-            vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-            vkCmdBindIndexBuffer(commandBuffer, indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+            vkCmdBindVertexBuffers(
+                commandBuffer, 0, 1, vertexBuffers, offsets
+            );
 
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, vulkan::graphicsPipeline.getLayout(), 0, 1, &descriptorSets[currentFrame], 0, nullptr);
+            
 
-            vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(indices.size()), 1, 0, 0, 0);
+            vkCmdBindIndexBuffer(
+                commandBuffer,
+                mesh.indexBuffer,
+                0,
+                VK_INDEX_TYPE_UINT32
+            );
+
+            vkCmdBindDescriptorSets(
+                commandBuffer, 
+                VK_PIPELINE_BIND_POINT_GRAPHICS, 
+                vulkan::graphicsPipeline.getLayout(), 
+                0, 
+                1,
+                &descriptorSets[currentFrame], 
+                0, 
+                nullptr
+            );
+
+            vkCmdDrawIndexed(
+                commandBuffer,
+                static_cast<uint32_t>(mesh.indices.size()),
+                1,
+                0,
+                0,
+                0
+            );
+        }
 
         vkCmdEndRenderPass(commandBuffer);
 

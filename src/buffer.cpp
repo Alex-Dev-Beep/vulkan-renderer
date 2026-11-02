@@ -29,4 +29,15 @@ namespace renderer {
 
         vkBindBufferMemory(vulkan::logicalDevice.get(), buffer, bufferMemory, 0);
     }
+
+    void buffer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
+        VkCommandBuffer commandBuffer = vulkan::commandBuffer.beginSingleTimeCommands();
+
+        VkBufferCopy copyRegion{};
+        copyRegion.size = size;
+        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        vulkan::commandBuffer.endSingleTimeCommands(commandBuffer);
+    }
+
 }
