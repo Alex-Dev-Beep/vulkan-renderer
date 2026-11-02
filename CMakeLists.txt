@@ -50,6 +50,10 @@ add_executable(renderer
     src/filesystem.cpp
     src/command_pool.cpp
     src/command_pool.hpp
+    src/resources.hpp
+    src/resources.cpp
+    src/image.hpp
+    src/image.cpp
 )
 
 target_link_libraries(renderer PRIVATE

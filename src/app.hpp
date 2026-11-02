@@ -11,6 +11,8 @@
 #include "swapchain.hpp"
 #include "descriptor_sets.hpp"
 #include "graphics_pipeline.hpp"
+#include "image.hpp"
+#include "resources.hpp"
 
 class vulkan {
     public:
@@ -25,6 +27,8 @@ class vulkan {
     inline static renderer::descriptorSetLayout descriptorSetLayout;
     inline static renderer::graphicsPipeline graphicsPipeline;
     inline static renderer::commandPool commandPool;
+    inline static renderer::image image;
+    inline static renderer::resources resources;
     inline static renderer::queues queues{};
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 };
