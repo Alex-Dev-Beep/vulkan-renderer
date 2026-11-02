@@ -1,7 +1,7 @@
 #include <app/cleanup.hpp>
 #include <app/app.hpp>
 #include <texture/texture.hpp>
-#include <model_loading/model.hpp>
+#include <mesh/model.hpp>
 #include <debug/validation_layers.hpp>
 #include <window/window.hpp>
 

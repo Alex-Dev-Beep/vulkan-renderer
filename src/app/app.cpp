@@ -1,6 +1,6 @@
 #include <app/app.hpp>
 #include <app/cleanup.hpp>
-#include <model_loading/model.hpp>
+#include <mesh/model.hpp>
 #include <texture/texture.hpp>
 #include <sync/sync.hpp>
 #include <window/window.hpp>

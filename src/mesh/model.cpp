@@ -1,4 +1,4 @@
-#include <model_loading/model.hpp>
+#include <mesh/model.hpp>
 #include <vertex.hpp>
 #include <buffers/vertex_buffer.hpp>
 #include <buffers/index_buffer.hpp>

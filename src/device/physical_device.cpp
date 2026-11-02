@@ -1,7 +1,7 @@
 #include <device/physical_device.hpp>
 #include <app/app.hpp>
 #include <swapchain/swapchain.hpp>
-#include "msaaSamples.hpp"
+#include <renderer/msaaSamples.hpp>
 
 #include <vector>
 #include <stdexcept>

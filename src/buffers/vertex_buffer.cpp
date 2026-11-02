@@ -1,6 +1,6 @@
 #include "vertex_buffer.hpp"
 #include <app/app.hpp>
-#include <model_loading/model.hpp>
+#include <mesh/model.hpp>
 
 #include <cstring>
 
