@@ -21,6 +21,7 @@ namespace renderer {
         VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
         VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
         void createSwapChain();
+        void recreateSwapChain();
 
         VkSwapchainKHR get() const;
         const std::vector<VkImage>& getImages() const;

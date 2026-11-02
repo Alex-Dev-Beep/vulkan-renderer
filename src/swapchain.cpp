@@ -1,6 +1,7 @@
 #include "swapchain.hpp"
-#include "app.hpp"
+#include "objects.hpp"
 #include "window.hpp"
+#include "cleanup.hpp"
 
 #include <cassert>
 #include <algorithm>
@@ -124,6 +125,25 @@ namespace renderer {
 
         swapChainImageFormat = surfaceFormat.format;
         swapChainExtent = extent;
+    }
+
+    void swapChain::recreateSwapChain() {
+        int width = 0, height = 0;
+        glfwGetFramebufferSize(renderer::mainWindow.get(), &width, &height);
+        while (width == 0 || height == 0) {
+            glfwGetFramebufferSize(renderer::mainWindow.get(), &width, &height);
+            glfwWaitEvents();
+        }
+
+        vkDeviceWaitIdle(vulkan::logicalDevice.get());
+
+        renderer::cleanupSwapChain();
+
+        vulkan::swapchain.createSwapChain();
+        vulkan::imageViews.createImageViews();
+        vulkan::resources.createColorResources();
+        vulkan::resources.createDepthResources();
+        vulkan::framebuffers.createFramebuffers();
     }
 
     VkSwapchainKHR swapChain::get() const {

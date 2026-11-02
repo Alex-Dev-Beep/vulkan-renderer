@@ -75,6 +75,10 @@ add_executable(renderer
     src/uniform_buffers.cpp
     src/descriptor_pool.cpp
     src/descriptor_pool.hpp
+    src/sync.hpp
+    src/sync.cpp
+    src/renderer.hpp
+    src/renderer.cpp
 )
 
 target_link_libraries(renderer PRIVATE

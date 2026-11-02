@@ -1,5 +1,5 @@
 #include "surface.hpp"
-#include "app.hpp"
+#include "objects.hpp"
 #include "window.hpp"
 
 #include <stdexcept>

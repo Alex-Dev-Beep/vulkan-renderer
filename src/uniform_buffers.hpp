@@ -20,6 +20,7 @@ namespace renderer {
     class uniformBuffers {
         public:
         void createUniformBuffers();
+        void updateUniformBuffer(uint32_t currentImage);
         std::vector<VkBuffer> getUniformBuffers() const;
         std::vector<VkDeviceMemory> getUniformBuffersMemory() const;
         std::vector<void*> getUniformBuffersMapped() const;
