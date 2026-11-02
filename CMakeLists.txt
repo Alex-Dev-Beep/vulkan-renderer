@@ -43,6 +43,11 @@ add_executable(renderer
     src/render_pass.cpp
     src/descriptor_sets.cpp
     src/descriptor_sets.hpp
+    src/graphics_pipeline.cpp
+    src/graphics_pipeline.hpp
+    src/vertex.hpp
+    src/filesystem.hpp
+    src/filesystem.cpp
 )
 
 target_link_libraries(renderer PRIVATE

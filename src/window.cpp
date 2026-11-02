@@ -1,13 +1,12 @@
 #include "window.hpp"
 
 namespace renderer {
-    window mainWindow{1280, 720};
+    window mainWindow{800, 720};
 
     window::window(int width, int height) {
         glfwInit();
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-        glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
 
         mainWindow = glfwCreateWindow(
