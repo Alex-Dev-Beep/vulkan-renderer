@@ -73,6 +73,8 @@ add_executable(renderer
     src/cleanup.hpp
     src/uniform_buffers.hpp
     src/uniform_buffers.cpp
+    src/descriptor_pool.cpp
+    src/descriptor_pool.hpp
 )
 
 target_link_libraries(renderer PRIVATE

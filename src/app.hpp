@@ -2,6 +2,7 @@
 
 #include "command_buffer.hpp"
 #include "command_pool.hpp"
+#include "descriptor_pool.hpp"
 #include "image_views.hpp"
 #include "instance.hpp"
 #include "debug_messenger.hpp"
@@ -37,11 +38,12 @@ class vulkan {
     inline static renderer::buffer buffer;
     inline static renderer::commandBuffer commandBuffer;
     inline static renderer::queues queues{};
-    inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
+    inline static renderer::descriptorPool descriptorPool;
     inline static renderer::uniformBuffers uniformBuffers;
+    inline static renderer::descriptorSets descriptorSets;
+    inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
     inline static std::vector<VkSemaphore> imageAvailableSemaphores;
     inline static std::vector<VkSemaphore> renderFinishedSemaphores;
     inline static std::vector<VkFence> inFlightFences;
-    inline static VkDescriptorPool descriptorPool;
     inline static const int MAX_FRAMES_IN_FLIGHT = 2;
 };

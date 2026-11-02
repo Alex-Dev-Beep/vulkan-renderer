@@ -38,7 +38,7 @@ namespace renderer {
             vkFreeMemory(vulkan::logicalDevice.get(), vulkan::uniformBuffers.getUniformBuffersMemory()[i], nullptr);
         }
 
-        vkDestroyDescriptorPool(vulkan::logicalDevice.get(), vulkan::descriptorPool, nullptr);
+        vkDestroyDescriptorPool(vulkan::logicalDevice.get(), vulkan::descriptorPool.get(), nullptr);
 
         for (const renderer::texture& tex : renderer::textures) {
 
