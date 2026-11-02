@@ -48,6 +48,8 @@ add_executable(renderer
     src/vertex.hpp
     src/filesystem.hpp
     src/filesystem.cpp
+    src/command_pool.cpp
+    src/command_pool.hpp
 )
 
 target_link_libraries(renderer PRIVATE

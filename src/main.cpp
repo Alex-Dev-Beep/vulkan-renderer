@@ -23,7 +23,6 @@
 #include <cstdlib>
 #include <cstdint>
 #include <array>
-#include <optional>
 #include <unordered_map>
 #include <cassert>
 
@@ -58,8 +57,6 @@ public:
     }
 
 private:
-
-    VkCommandPool commandPool;
 
     VkImage colorImage;
     VkDeviceMemory colorImageMemory;
@@ -107,7 +104,7 @@ private:
         vulkan::renderPass.createRenderPass();
         vulkan::descriptorSetLayout.createDescriptorSetLayout();
         vulkan::graphicsPipeline.createGraphicsPipeline();
-        createCommandPool();
+        vulkan::commandPool.createCommandPool();
         createColorResources();
         createDepthResources();
         createFramebuffers();
@@ -187,7 +184,7 @@ private:
             vkDestroyFence(vulkan::logicalDevice.get(), inFlightFences[i], nullptr);
         }
 
-        vkDestroyCommandPool(vulkan::logicalDevice.get(), commandPool, nullptr);
+        vkDestroyCommandPool(vulkan::logicalDevice.get(), vulkan::commandPool.get(), nullptr);
 
         vkDestroyDevice(vulkan::logicalDevice.get(), nullptr);
 
@@ -243,19 +240,6 @@ private:
             if (vkCreateFramebuffer(vulkan::logicalDevice.get(), &framebufferInfo, nullptr, &vulkan::swapchain.getFramebuffers()[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create framebuffer!");
             }
-        }
-    }
-
-    void createCommandPool() {
-        QueueFamilyIndices queueFamilyIndices = vulkan::physicalDevice.findQueueFamilies(vulkan::physicalDevice.get());
-
-        VkCommandPoolCreateInfo poolInfo{};
-        poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
-
-        if (vkCreateCommandPool(vulkan::logicalDevice.get(), &poolInfo, nullptr, &commandPool) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create graphics command pool!");
         }
     }
 
@@ -728,17 +712,30 @@ private:
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = vulkan::commandPool.get();
         allocInfo.commandBufferCount = 1;
 
-        VkCommandBuffer commandBuffer;
-        vkAllocateCommandBuffers(vulkan::logicalDevice.get(), &allocInfo, &commandBuffer);
+        VkCommandBuffer commandBuffer{};
+
+        VkResult result = vkAllocateCommandBuffers(
+            vulkan::logicalDevice.get(),
+            &allocInfo,
+            &commandBuffer
+        );
+
+        if (result != VK_SUCCESS) {
+            throw std::runtime_error("Failed to allocate command buffer");
+        }
 
         VkCommandBufferBeginInfo beginInfo{};
         beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
-        vkBeginCommandBuffer(commandBuffer, &beginInfo);
+        result = vkBeginCommandBuffer(commandBuffer, &beginInfo);
+
+        if (result != VK_SUCCESS) {
+            throw std::runtime_error("Failed to begin command buffer");
+        }
 
         return commandBuffer;
     }
@@ -754,7 +751,7 @@ private:
         vkQueueSubmit(vulkan::queues.graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
         vkQueueWaitIdle(vulkan::queues.graphicsQueue);
 
-        vkFreeCommandBuffers(vulkan::logicalDevice.get(), commandPool, 1, &commandBuffer);
+        vkFreeCommandBuffers(vulkan::logicalDevice.get(), vulkan::commandPool.get(), 1, &commandBuffer);
     }
 
     void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
@@ -785,7 +782,7 @@ private:
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-        allocInfo.commandPool = commandPool;
+        allocInfo.commandPool = vulkan::commandPool.get();
         allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
         allocInfo.commandBufferCount = (uint32_t) commandBuffers.size();
 

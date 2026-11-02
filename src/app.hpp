@@ -1,5 +1,6 @@
 #pragma once
 
+#include "command_pool.hpp"
 #include "image_views.hpp"
 #include "instance.hpp"
 #include "debug_messenger.hpp"
@@ -23,6 +24,7 @@ class vulkan {
     inline static renderer::renderPass renderPass;
     inline static renderer::descriptorSetLayout descriptorSetLayout;
     inline static renderer::graphicsPipeline graphicsPipeline;
+    inline static renderer::commandPool commandPool;
     inline static renderer::queues queues{};
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 };
