@@ -37,6 +37,10 @@ add_executable(renderer
     src/swapchain.cpp
     src/msaaSamples.hpp
     src/msaaSamples.cpp
+    src/image_views.hpp
+    src/image_views.cpp
+    src/render_pass.hpp
+    src/render_pass.cpp
 )
 
 target_link_libraries(renderer PRIVATE
