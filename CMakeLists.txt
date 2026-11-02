@@ -54,6 +54,15 @@ add_executable(renderer
     src/resources.cpp
     src/image.hpp
     src/image.cpp
+    src/texture.hpp
+    src/texture.cpp
+    src/framebuffers.cpp
+    src/framebuffers.hpp
+    src/implementation.cpp
+    src/buffer.hpp
+    src/buffer.cpp
+    src/command_buffer.cpp
+    src/command_buffer.hpp
 )
 
 target_link_libraries(renderer PRIVATE

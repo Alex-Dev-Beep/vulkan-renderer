@@ -1,5 +1,6 @@
 #pragma once
 
+#include "command_buffer.hpp"
 #include "command_pool.hpp"
 #include "image_views.hpp"
 #include "instance.hpp"
@@ -13,6 +14,9 @@
 #include "graphics_pipeline.hpp"
 #include "image.hpp"
 #include "resources.hpp"
+#include "framebuffers.hpp"
+#include "buffer.hpp"
+#include "texture.hpp"
 
 class vulkan {
     public:
@@ -29,6 +33,10 @@ class vulkan {
     inline static renderer::commandPool commandPool;
     inline static renderer::image image;
     inline static renderer::resources resources;
+    inline static renderer::framebuffers framebuffers;
+    inline static renderer::textures textures;
+    inline static renderer::buffer buffer;
+    inline static renderer::commandBuffer commandBuffer;
     inline static renderer::queues queues{};
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 };
