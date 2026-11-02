@@ -1,5 +1,5 @@
 #include "texture.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 
 #include <stb_image.h>
 #include <stdexcept>

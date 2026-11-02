@@ -1,5 +1,5 @@
 #include "image_views.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 #include "swapchain.hpp"
 
 #include <stdexcept>

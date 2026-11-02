@@ -8,7 +8,7 @@
 
 #include "logical_device.hpp"
 #include "physical_device.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 #include "validation_layers.hpp"
 
 namespace renderer {

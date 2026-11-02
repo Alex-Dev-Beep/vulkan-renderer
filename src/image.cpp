@@ -1,5 +1,5 @@
 #include "image.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 
 #include <stdexcept>
 

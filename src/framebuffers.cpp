@@ -1,5 +1,5 @@
 #include "framebuffers.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 
 #include <array>
 #include <stdexcept>

@@ -1,5 +1,5 @@
 #include "vertex_buffer.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 #include "model.hpp"
 
 #include <cstring>

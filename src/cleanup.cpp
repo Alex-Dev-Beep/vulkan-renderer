@@ -1,5 +1,5 @@
 #include "cleanup.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 #include "texture.hpp"
 #include "model.hpp"
 #include "validation_layers.hpp"

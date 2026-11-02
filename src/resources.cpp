@@ -1,6 +1,5 @@
 #include "resources.hpp"
-#include "objects.hpp"
-
+#include "app.hpp"
 #include "image.hpp"
 
 namespace renderer {

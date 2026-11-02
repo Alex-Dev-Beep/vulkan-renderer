@@ -1,5 +1,12 @@
 #pragma once
 
+class App {
+    public:
+    void run();
+    void initVulkan();
+    void mainLoop();
+};
+
 #include "command_buffer.hpp"
 #include "command_pool.hpp"
 #include "descriptor_pool.hpp"

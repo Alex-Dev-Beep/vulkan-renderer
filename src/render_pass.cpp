@@ -1,5 +1,5 @@
 #include "render_pass.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 
 #include <stdexcept>
 #include <array>

@@ -79,6 +79,7 @@ add_executable(renderer
     src/sync.cpp
     src/renderer.hpp
     src/renderer.cpp
+    src/app.cpp
 )
 
 target_link_libraries(renderer PRIVATE

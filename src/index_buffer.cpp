@@ -1,5 +1,5 @@
 #include "index_buffer.hpp"
-#include "objects.hpp"
+#include "app.hpp"
 
 #include <cstring>
 
