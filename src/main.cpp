@@ -19,7 +19,6 @@
 #include <array>
 #include <cassert>
 
-#include "validation_layers.hpp"
 #include "window.hpp"
 #include "instance.hpp"
 #include "debug_messenger.hpp"
@@ -31,10 +30,9 @@
 #include "vertex.hpp"
 #include "texture.hpp"
 #include "model.hpp"
+#include "cleanup.hpp"
 
 const std::string MODEL_PATH = "assets/models/viking_room.obj";
-
-const int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct UniformBufferObject {
     alignas(16) glm::mat4 model;
@@ -47,22 +45,15 @@ public:
     void run() {
         initVulkan();
         mainLoop();
-        cleanup();
+        renderer::cleanup();
     }
 
 private:
-    std::vector<VkBuffer> uniformBuffers;
-    std::vector<VkDeviceMemory> uniformBuffersMemory;
-    std::vector<void*> uniformBuffersMapped;
 
-    VkDescriptorPool descriptorPool;
     std::vector<VkDescriptorSet> descriptorSets;
 
     std::vector<VkCommandBuffer> commandBuffers;
 
-    std::vector<VkSemaphore> imageAvailableSemaphores;
-    std::vector<VkSemaphore> renderFinishedSemaphores;
-    std::vector<VkFence> inFlightFences;
     uint32_t currentFrame = 0;
 
     void initVulkan() {
@@ -109,83 +100,6 @@ private:
         vkDeviceWaitIdle(vulkan::logicalDevice.get());
     }
 
-    void cleanupSwapChain() {
-        vkDestroyImageView(vulkan::logicalDevice.get(), vulkan::resources.getDepthImage().imageView, nullptr);
-        vkDestroyImage(vulkan::logicalDevice.get(), vulkan::resources.getDepthImage().image, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), vulkan::resources.getDepthImage().imageMemory, nullptr);
-
-        vkDestroyImageView(vulkan::logicalDevice.get(), vulkan::resources.getColorImage().imageView, nullptr);
-        vkDestroyImage(vulkan::logicalDevice.get(), vulkan::resources.getColorImage().image, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), vulkan::resources.getColorImage().imageMemory, nullptr);
-
-        for (auto framebuffer : vulkan::swapchain.getFramebuffers()) {
-            vkDestroyFramebuffer(vulkan::logicalDevice.get(), framebuffer, nullptr);
-        }
-
-        for (auto imageView : vulkan::swapchain.getImageViews()) {
-            vkDestroyImageView(vulkan::logicalDevice.get(), imageView, nullptr);
-        }
-
-        vkDestroySwapchainKHR(vulkan::logicalDevice.get(), vulkan::swapchain.get(), nullptr);
-    }
-
-    void cleanup() {
-        cleanupSwapChain();
-
-        vkDestroyPipeline(vulkan::logicalDevice.get(), vulkan::graphicsPipeline.get(), nullptr);
-        vkDestroyPipelineLayout(vulkan::logicalDevice.get(), vulkan::graphicsPipeline.getLayout(), nullptr);
-        vkDestroyRenderPass(vulkan::logicalDevice.get(), vulkan::renderPass.get(), nullptr);
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(vulkan::logicalDevice.get(), uniformBuffers[i], nullptr);
-            vkFreeMemory(vulkan::logicalDevice.get(), uniformBuffersMemory[i], nullptr);
-        }
-
-        vkDestroyDescriptorPool(vulkan::logicalDevice.get(), descriptorPool, nullptr);
-
-        for (const renderer::texture& tex : renderer::textures) {
-
-            vkDestroySampler(vulkan::logicalDevice.get(), tex.textureSampler, nullptr);
-            vkDestroyImageView(vulkan::logicalDevice.get(), tex.textureImageView, nullptr);
-
-            vkDestroyImage(vulkan::logicalDevice.get(), tex.textureImage, nullptr);
-            vkFreeMemory(vulkan::logicalDevice.get(), tex.textureImageMemory, nullptr);
-
-        }
-
-        vkDestroyDescriptorSetLayout(vulkan::logicalDevice.get(), vulkan::descriptorSetLayout.get(), nullptr);
-
-        for (const renderer::mesh& model : renderer::meshes) {
-
-            vkDestroyBuffer(vulkan::logicalDevice.get(), model.indexBuffer, nullptr);
-            vkFreeMemory(vulkan::logicalDevice.get(), model.indexBufferMemory, nullptr);
-
-            vkDestroyBuffer(vulkan::logicalDevice.get(), model.vertexBuffer, nullptr);
-            vkFreeMemory(vulkan::logicalDevice.get(), model.vertexBufferMemory, nullptr);
-
-        }
-
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroySemaphore(vulkan::logicalDevice.get(), renderFinishedSemaphores[i], nullptr);
-            vkDestroySemaphore(vulkan::logicalDevice.get(), imageAvailableSemaphores[i], nullptr);
-            vkDestroyFence(vulkan::logicalDevice.get(), inFlightFences[i], nullptr);
-        }
-
-        vkDestroyCommandPool(vulkan::logicalDevice.get(), vulkan::commandPool.get(), nullptr);
-
-        vkDestroyDevice(vulkan::logicalDevice.get(), nullptr);
-
-        if (enableValidationLayers) {
-            renderer::validationLayers::DestroyDebugUtilsMessengerEXT(vulkan::instance.get(), vulkan::debugMessenger.get(), nullptr);
-        }
-
-        vkDestroySurfaceKHR(vulkan::instance.get(), vulkan::surface.get(), nullptr);
-
-        glfwDestroyWindow(renderer::mainWindow.get());
-
-        glfwTerminate();
-    }
-
     void recreateSwapChain() {
         int width = 0, height = 0;
         glfwGetFramebufferSize(renderer::mainWindow.get(), &width, &height);
@@ -196,7 +110,7 @@ private:
 
         vkDeviceWaitIdle(vulkan::logicalDevice.get());
 
-        cleanupSwapChain();
+        renderer::cleanupSwapChain();
 
         vulkan::swapchain.createSwapChain();
         vulkan::imageViews.createImageViews();
@@ -212,49 +126,49 @@ private:
     void createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-        uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-        uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-        uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
+        vulkan::uniformBuffers.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        vulkan::uniformBuffersMemory.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        vulkan::uniformBuffersMapped.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
+        for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
+            vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vulkan::uniformBuffers[i], vulkan::uniformBuffersMemory[i]);
 
-            vkMapMemory(vulkan::logicalDevice.get(), uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
+            vkMapMemory(vulkan::logicalDevice.get(), vulkan::uniformBuffersMemory[i], 0, bufferSize, 0, &vulkan::uniformBuffersMapped[i]);
         }
     }
 
     void createDescriptorPool() {
         std::array<VkDescriptorPoolSize, 2> poolSizes{};
         poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[0].descriptorCount = static_cast<uint32_t>(vulkan::MAX_FRAMES_IN_FLIGHT);
         poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolSizes[1].descriptorCount = static_cast<uint32_t>(vulkan::MAX_FRAMES_IN_FLIGHT);
 
         VkDescriptorPoolCreateInfo poolInfo{};
         poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
         poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
         poolInfo.pPoolSizes = poolSizes.data();
-        poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+        poolInfo.maxSets = static_cast<uint32_t>(vulkan::MAX_FRAMES_IN_FLIGHT);
 
-        if (vkCreateDescriptorPool(vulkan::logicalDevice.get(), &poolInfo, nullptr, &descriptorPool) != VK_SUCCESS) {
+        if (vkCreateDescriptorPool(vulkan::logicalDevice.get(), &poolInfo, nullptr, &vulkan::descriptorPool) != VK_SUCCESS) {
             throw std::runtime_error("failed to create descriptor pool!");
         }
     }
 
     void createDescriptorSets() {
         std::vector<VkDescriptorSetLayout> layouts(
-            MAX_FRAMES_IN_FLIGHT,
+            vulkan::MAX_FRAMES_IN_FLIGHT,
             vulkan::descriptorSetLayout.get()
         );
 
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-        allocInfo.descriptorPool = descriptorPool;
+        allocInfo.descriptorPool = vulkan::descriptorPool;
         allocInfo.descriptorSetCount =
-            static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+            static_cast<uint32_t>(vulkan::MAX_FRAMES_IN_FLIGHT);
         allocInfo.pSetLayouts = layouts.data();
 
-        descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
+        descriptorSets.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
 
         if (vkAllocateDescriptorSets(
             vulkan::logicalDevice.get(),
@@ -278,9 +192,9 @@ private:
             imageInfos.push_back(imageInfo);
         }
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = uniformBuffers[i];
+            bufferInfo.buffer = vulkan::uniformBuffers[i];
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -320,7 +234,7 @@ private:
     }
 
     void createCommandBuffers() {
-        commandBuffers.resize(MAX_FRAMES_IN_FLIGHT);
+        commandBuffers.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
 
         VkCommandBufferAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -427,9 +341,9 @@ private:
     }
 
     void createSyncObjects() {
-        imageAvailableSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        renderFinishedSemaphores.resize(MAX_FRAMES_IN_FLIGHT);
-        inFlightFences.resize(MAX_FRAMES_IN_FLIGHT);
+        vulkan::imageAvailableSemaphores.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        vulkan::renderFinishedSemaphores.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        vulkan::inFlightFences.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
         semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -438,10 +352,10 @@ private:
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo, nullptr, &imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo, nullptr, &renderFinishedSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(vulkan::logicalDevice.get(), &fenceInfo, nullptr, &inFlightFences[i]) != VK_SUCCESS) {
+        for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
+            if (vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo, nullptr, &vulkan::imageAvailableSemaphores[i]) != VK_SUCCESS ||
+                vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo, nullptr, &vulkan::renderFinishedSemaphores[i]) != VK_SUCCESS ||
+                vkCreateFence(vulkan::logicalDevice.get(), &fenceInfo, nullptr, &vulkan::inFlightFences[i]) != VK_SUCCESS) {
                 throw std::runtime_error("failed to create synchronization objects for a frame!");
             }
         }
@@ -459,14 +373,14 @@ private:
         ubo.proj = glm::perspective(glm::radians(45.0f), vulkan::swapchain.getExtent().width / (float) vulkan::swapchain.getExtent().height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1;
 
-        memcpy(uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+        memcpy(vulkan::uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
     }
 
     void drawFrame() {
-        vkWaitForFences(vulkan::logicalDevice.get(), 1, &inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
+        vkWaitForFences(vulkan::logicalDevice.get(), 1, &vulkan::inFlightFences[currentFrame], VK_TRUE, UINT64_MAX);
 
         uint32_t imageIndex;
-        VkResult result = vkAcquireNextImageKHR(vulkan::logicalDevice.get(), vulkan::swapchain.get(), UINT64_MAX, imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
+        VkResult result = vkAcquireNextImageKHR(vulkan::logicalDevice.get(), vulkan::swapchain.get(), UINT64_MAX, vulkan::imageAvailableSemaphores[currentFrame], VK_NULL_HANDLE, &imageIndex);
 
         if (result == VK_ERROR_OUT_OF_DATE_KHR) {
             recreateSwapChain();
@@ -477,7 +391,7 @@ private:
 
         updateUniformBuffer(currentFrame);
 
-        vkResetFences(vulkan::logicalDevice.get(), 1, &inFlightFences[currentFrame]);
+        vkResetFences(vulkan::logicalDevice.get(), 1, &vulkan::inFlightFences[currentFrame]);
 
         vkResetCommandBuffer(commandBuffers[currentFrame], /*VkCommandBufferResetFlagBits*/ 0);
         recordCommandBuffer(commandBuffers[currentFrame], imageIndex);
@@ -485,7 +399,7 @@ private:
         VkSubmitInfo submitInfo{};
         submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 
-        VkSemaphore waitSemaphores[] = {imageAvailableSemaphores[currentFrame]};
+        VkSemaphore waitSemaphores[] = {vulkan::imageAvailableSemaphores[currentFrame]};
         VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
         submitInfo.waitSemaphoreCount = 1;
         submitInfo.pWaitSemaphores = waitSemaphores;
@@ -494,11 +408,11 @@ private:
         submitInfo.commandBufferCount = 1;
         submitInfo.pCommandBuffers = &commandBuffers[currentFrame];
 
-        VkSemaphore signalSemaphores[] = {renderFinishedSemaphores[currentFrame]};
+        VkSemaphore signalSemaphores[] = {vulkan::renderFinishedSemaphores[currentFrame]};
         submitInfo.signalSemaphoreCount = 1;
         submitInfo.pSignalSemaphores = signalSemaphores;
 
-        if (vkQueueSubmit(vulkan::queues.graphicsQueue, 1, &submitInfo, inFlightFences[currentFrame]) != VK_SUCCESS) {
+        if (vkQueueSubmit(vulkan::queues.graphicsQueue, 1, &submitInfo, vulkan::inFlightFences[currentFrame]) != VK_SUCCESS) {
             throw std::runtime_error("failed to submit draw command buffer!");
         }
 
@@ -525,7 +439,7 @@ private:
             throw std::runtime_error("failed to present swap chain image!");
         }
 
-        currentFrame = (currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+        currentFrame = (currentFrame + 1) % vulkan::MAX_FRAMES_IN_FLIGHT;
     }
 };
 

@@ -69,6 +69,8 @@ add_executable(renderer
     src/vertex_buffer.cpp
     src/index_buffer.cpp
     src/index_buffer.hpp
+    src/cleanup.cpp
+    src/cleanup.hpp
 )
 
 target_link_libraries(renderer PRIVATE
