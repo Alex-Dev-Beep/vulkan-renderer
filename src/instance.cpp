@@ -6,16 +6,6 @@
 
 namespace renderer {
 
-    instance::instance() {
-        createInstance();
-    }
-
-    instance::~instance() {
-        if (vkInstance != VK_NULL_HANDLE) {
-            vkDestroyInstance(vkInstance, nullptr);
-        }
-    }
-
     VkInstance instance::get() const {
         return vkInstance;
     }
@@ -32,7 +22,7 @@ namespace renderer {
         appInfo.pEngineName = "No Engine";
         appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
         appInfo.apiVersion = VK_API_VERSION_1_3;
-        
+
         VkInstanceCreateInfo createInfo{};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = &appInfo;

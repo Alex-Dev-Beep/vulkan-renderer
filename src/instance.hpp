@@ -8,10 +8,6 @@ namespace renderer {
 
     class instance {
         public:
-        instance();
-        instance(const instance&) = delete;
-        instance& operator=(const instance&) = delete;
-        ~instance();
 
         void createInstance();
         VkInstance get() const;
