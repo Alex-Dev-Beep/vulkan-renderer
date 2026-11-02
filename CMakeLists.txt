@@ -41,6 +41,8 @@ add_executable(renderer
     src/image_views.cpp
     src/render_pass.hpp
     src/render_pass.cpp
+    src/descriptor_sets.cpp
+    src/descriptor_sets.hpp
 )
 
 target_link_libraries(renderer PRIVATE

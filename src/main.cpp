@@ -106,7 +106,6 @@ public:
     }
 
 private:
-    VkDescriptorSetLayout descriptorSetLayout;
     VkPipelineLayout pipelineLayout;
     VkPipeline graphicsPipeline;
 
@@ -156,7 +155,7 @@ private:
         vulkan::swapchain.createSwapChain();
         vulkan::imageViews.createImageViews();
         vulkan::renderPass.createRenderPass();
-        createDescriptorSetLayout();
+        vulkan::descriptorSetLayout.createDescriptorSetLayout();
         createGraphicsPipeline();
         createCommandPool();
         createColorResources();
@@ -224,7 +223,7 @@ private:
         vkDestroyImage(vulkan::logicalDevice.get(), textureImage, nullptr);
         vkFreeMemory(vulkan::logicalDevice.get(), textureImageMemory, nullptr);
 
-        vkDestroyDescriptorSetLayout(vulkan::logicalDevice.get(), descriptorSetLayout, nullptr);
+        vkDestroyDescriptorSetLayout(vulkan::logicalDevice.get(), vulkan::descriptorSetLayout.get(), nullptr);
 
         vkDestroyBuffer(vulkan::logicalDevice.get(), indexBuffer, nullptr);
         vkFreeMemory(vulkan::logicalDevice.get(), indexBufferMemory, nullptr);
@@ -270,32 +269,6 @@ private:
         createColorResources();
         createDepthResources();
         createFramebuffers();
-    }
-
-    void createDescriptorSetLayout() {
-        VkDescriptorSetLayoutBinding uboLayoutBinding{};
-        uboLayoutBinding.binding = 0;
-        uboLayoutBinding.descriptorCount = 1;
-        uboLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-        uboLayoutBinding.pImmutableSamplers = nullptr;
-        uboLayoutBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-        VkDescriptorSetLayoutBinding samplerLayoutBinding{};
-        samplerLayoutBinding.binding = 1;
-        samplerLayoutBinding.descriptorCount = 1;
-        samplerLayoutBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-        samplerLayoutBinding.pImmutableSamplers = nullptr;
-        samplerLayoutBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-        std::array<VkDescriptorSetLayoutBinding, 2> bindings = {uboLayoutBinding, samplerLayoutBinding};
-        VkDescriptorSetLayoutCreateInfo layoutInfo{};
-        layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-        layoutInfo.bindingCount = static_cast<uint32_t>(bindings.size());
-        layoutInfo.pBindings = bindings.data();
-
-        if (vkCreateDescriptorSetLayout(vulkan::logicalDevice.get(), &layoutInfo, nullptr, &descriptorSetLayout) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create descriptor set layout!");
-        }
     }
 
     void createGraphicsPipeline() {
@@ -390,7 +363,7 @@ private:
         VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
         pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
         pipelineLayoutInfo.setLayoutCount = 1;
-        pipelineLayoutInfo.pSetLayouts = &descriptorSetLayout;
+        pipelineLayoutInfo.pSetLayouts = &vulkan::descriptorSetLayout.get();
 
         if (vkCreatePipelineLayout(vulkan::logicalDevice.get(), &pipelineLayoutInfo, nullptr, &pipelineLayout) != VK_SUCCESS) {
             throw std::runtime_error("failed to create pipeline layout!");
@@ -853,7 +826,7 @@ private:
     }
 
     void createDescriptorSets() {
-        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, descriptorSetLayout);
+        std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, vulkan::descriptorSetLayout.get());
         VkDescriptorSetAllocateInfo allocInfo{};
         allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
         allocInfo.descriptorPool = descriptorPool;

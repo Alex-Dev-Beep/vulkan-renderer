@@ -8,6 +8,7 @@
 #include "render_pass.hpp"
 #include "surface.hpp"
 #include "swapchain.hpp"
+#include "descriptor_sets.hpp"
 
 class vulkan {
     public:
@@ -19,6 +20,7 @@ class vulkan {
     inline static renderer::swapChain swapchain;
     inline static renderer::imageViews imageViews;
     inline static renderer::renderPass renderPass;
+    inline static renderer::descriptorSetLayout descriptorSetLayout;
     inline static renderer::queues queues{};
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 };
