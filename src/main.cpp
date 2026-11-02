@@ -32,14 +32,6 @@
 #include "model.hpp"
 #include "cleanup.hpp"
 
-const std::string MODEL_PATH = "assets/models/viking_room.obj";
-
-struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
-
 class App {
 public:
     void run() {
@@ -84,7 +76,7 @@ private:
 
         renderer::meshes.push_back(vikingRoom);
 
-        createUniformBuffers();
+        vulkan::uniformBuffers.createUniformBuffers();
         createDescriptorPool();
         createDescriptorSets();
         createCommandBuffers();
@@ -121,20 +113,6 @@ private:
 
     bool hasStencilComponent(VkFormat format) {
         return format == VK_FORMAT_D32_SFLOAT_S8_UINT || format == VK_FORMAT_D24_UNORM_S8_UINT;
-    }
-
-    void createUniformBuffers() {
-        VkDeviceSize bufferSize = sizeof(UniformBufferObject);
-
-        vulkan::uniformBuffers.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
-        vulkan::uniformBuffersMemory.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
-        vulkan::uniformBuffersMapped.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
-
-        for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
-            vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vulkan::uniformBuffers[i], vulkan::uniformBuffersMemory[i]);
-
-            vkMapMemory(vulkan::logicalDevice.get(), vulkan::uniformBuffersMemory[i], 0, bufferSize, 0, &vulkan::uniformBuffersMapped[i]);
-        }
     }
 
     void createDescriptorPool() {
@@ -194,7 +172,7 @@ private:
 
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
             VkDescriptorBufferInfo bufferInfo{};
-            bufferInfo.buffer = vulkan::uniformBuffers[i];
+            bufferInfo.buffer = vulkan::uniformBuffers.getUniformBuffers()[i];
             bufferInfo.offset = 0;
             bufferInfo.range = sizeof(UniformBufferObject);
 
@@ -373,7 +351,7 @@ private:
         ubo.proj = glm::perspective(glm::radians(45.0f), vulkan::swapchain.getExtent().width / (float) vulkan::swapchain.getExtent().height, 0.1f, 10.0f);
         ubo.proj[1][1] *= -1;
 
-        memcpy(vulkan::uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
+        memcpy(vulkan::uniformBuffers.getUniformBuffersMapped()[currentImage], &ubo, sizeof(ubo));
     }
 
     void drawFrame() {

@@ -16,6 +16,7 @@
 #include "resources.hpp"
 #include "framebuffers.hpp"
 #include "buffer.hpp"
+#include "uniform_buffers.hpp"
 
 class vulkan {
     public:
@@ -37,12 +38,10 @@ class vulkan {
     inline static renderer::commandBuffer commandBuffer;
     inline static renderer::queues queues{};
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
-    inline static const int MAX_FRAMES_IN_FLIGHT = 2;
-    inline static std::vector<VkBuffer> uniformBuffers;
-    inline static std::vector<VkDeviceMemory> uniformBuffersMemory;
-    inline static std::vector<void*> uniformBuffersMapped;
+    inline static renderer::uniformBuffers uniformBuffers;
     inline static std::vector<VkSemaphore> imageAvailableSemaphores;
     inline static std::vector<VkSemaphore> renderFinishedSemaphores;
     inline static std::vector<VkFence> inFlightFences;
     inline static VkDescriptorPool descriptorPool;
+    inline static const int MAX_FRAMES_IN_FLIGHT = 2;
 };

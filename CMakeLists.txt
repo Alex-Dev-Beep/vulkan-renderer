@@ -71,6 +71,8 @@ add_executable(renderer
     src/index_buffer.hpp
     src/cleanup.cpp
     src/cleanup.hpp
+    src/uniform_buffers.hpp
+    src/uniform_buffers.cpp
 )
 
 target_link_libraries(renderer PRIVATE

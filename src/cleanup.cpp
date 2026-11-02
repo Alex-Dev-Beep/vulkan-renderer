@@ -34,8 +34,8 @@ namespace renderer {
         vkDestroyRenderPass(vulkan::logicalDevice.get(), vulkan::renderPass.get(), nullptr);
 
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(vulkan::logicalDevice.get(), vulkan::uniformBuffers[i], nullptr);
-            vkFreeMemory(vulkan::logicalDevice.get(), vulkan::uniformBuffersMemory[i], nullptr);
+            vkDestroyBuffer(vulkan::logicalDevice.get(), vulkan::uniformBuffers.getUniformBuffers()[i], nullptr);
+            vkFreeMemory(vulkan::logicalDevice.get(), vulkan::uniformBuffers.getUniformBuffersMemory()[i], nullptr);
         }
 
         vkDestroyDescriptorPool(vulkan::logicalDevice.get(), vulkan::descriptorPool, nullptr);
