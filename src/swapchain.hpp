@@ -1,5 +1,6 @@
 #pragma once
 
+#include <vulkan/vulkan_core.h>
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
@@ -13,10 +14,27 @@ namespace renderer {
         std::vector<VkPresentModeKHR> presentModes;
     };
 
-    class swapchain {
+    class swapChain {
         public:
         SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+        VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
+        VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
+        VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+        void createSwapChain();
+
+        VkSwapchainKHR get() const;
+        const std::vector<VkImage>& getImages() const;
+        VkFormat getImageFormat() const;
+        VkExtent2D getExtent() const;
+        std::vector<VkImageView>& getImageViews();
+        std::vector<VkFramebuffer>& getFramebuffers();
 
         private:
+        VkSwapchainKHR swapChain;
+        std::vector<VkImage> swapChainImages;
+        VkFormat swapChainImageFormat;
+        VkExtent2D swapChainExtent;
+        std::vector<VkImageView> swapChainImageViews;
+        std::vector<VkFramebuffer> swapChainFramebuffers;
     };
 }

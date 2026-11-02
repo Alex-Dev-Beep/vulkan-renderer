@@ -14,7 +14,7 @@ class vulkan {
     inline static renderer::surface surface;
     inline static renderer::physicalDevice physicalDevice;
     inline static renderer::logicalDevice logicalDevice;
-    inline static renderer::swapchain swapchain;
+    inline static renderer::swapChain swapchain;
     inline static renderer::queues queues{};
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
 };
