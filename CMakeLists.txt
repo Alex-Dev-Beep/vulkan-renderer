@@ -1,4 +1,3 @@
-
 cmake_minimum_required(VERSION 3.20)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -15,6 +14,32 @@ find_package(Vulkan REQUIRED)
 
 add_subdirectory(thirdparty/glfw)
 add_subdirectory(thirdparty/glm)
+
+# Dear ImGui
+set(IMGUI_DIR ${CMAKE_CURRENT_SOURCE_DIR}/thirdparty/imgui)
+
+add_library(imgui STATIC
+    ${IMGUI_DIR}/imgui.cpp
+    ${IMGUI_DIR}/imgui_draw.cpp
+    ${IMGUI_DIR}/imgui_tables.cpp
+    ${IMGUI_DIR}/imgui_widgets.cpp
+
+    # GLFW backend
+    ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
+
+    # Vulkan backend
+    ${IMGUI_DIR}/backends/imgui_impl_vulkan.cpp
+)
+
+target_include_directories(imgui PUBLIC
+    ${IMGUI_DIR}
+    ${IMGUI_DIR}/backends
+)
+
+target_link_libraries(imgui PUBLIC
+    glfw
+    Vulkan::Vulkan
+)
 
 add_executable(renderer
     src/main.cpp
@@ -79,12 +104,14 @@ add_executable(renderer
     src/renderer/renderer.hpp
     src/renderer/renderer.cpp
     src/app/app.cpp
-    src/app/app.hpp   
+    src/app/app.hpp
 )
 
 target_link_libraries(renderer PRIVATE
     glfw
+    glm
     Vulkan::Vulkan
+    imgui
 )
 
 target_include_directories(renderer PRIVATE
