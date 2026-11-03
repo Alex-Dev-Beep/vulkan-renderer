@@ -47,8 +47,8 @@ namespace renderer {
         createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 
         if (enableValidationLayers) {
-            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayerNames.size());
-            createInfo.ppEnabledLayerNames = validationLayerNames.data();
+            createInfo.enabledLayerCount = 0;
+            createInfo.ppEnabledLayerNames = nullptr;
         } else {
             createInfo.enabledLayerCount = 0;
         }
