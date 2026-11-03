@@ -16,11 +16,9 @@ namespace renderer {
     void resources::createColorResources() {
         VkFormat colorFormat = vulkan::swapchain.getImageFormat();
 
-          << "hi x" << std::endl;
 
         vulkan::image.createImage(vulkan::swapchain.getExtent().width, vulkan::swapchain.getExtent().height, 1, vulkan::msaaSamples, colorFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, colorImage.image, colorImage.allocation);
         
-          << "not surviving" << std::endl;
         
         colorImage.imageView = vulkan::imageViews.createImageView(colorImage.image, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
     }

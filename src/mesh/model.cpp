@@ -59,11 +59,8 @@ namespace renderer {
     }
 
     void createModel(mesh& model) {
-          << "Loading Model";
         loadModel(model);
-          << "Entering Vertex Buffer";
         createVertexBuffer(model);
-          << "Entering Index Buffer";
         createIndexBuffer(model);
     }
 }

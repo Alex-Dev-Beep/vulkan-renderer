@@ -10,9 +10,7 @@
 namespace renderer {
 
     void createVertexBuffer(mesh& model) {
-          << "1" << std::endl;
         VkDeviceSize bufferSize = sizeof(model.vertices[0]) * model.vertices.size();
-          << "1" << std::endl;
 
         // Staging buffer
         VkBuffer stagingBuffer;
@@ -25,7 +23,6 @@ namespace renderer {
             stagingBuffer,
             stagingAllocation
         );
-          << "1" << std::endl;
 
         // Copy vertex data to staging buffer
         void* data = nullptr;
@@ -35,22 +32,18 @@ namespace renderer {
             stagingAllocation,
             &data
         );
-          << "1" << std::endl;
 
         if (result != VK_SUCCESS) {
             vulkan::buffer.destroyBuffer(stagingBuffer, stagingAllocation);
             throw std::runtime_error("Failed to map staging buffer!");
         }
-          << "1" << std::endl;
 
         std::memcpy(data, model.vertices.data(), static_cast<size_t>(bufferSize));
-          << "1" << std::endl;
 
         vmaUnmapMemory(
             vulkan::memoryAllocator.get(),
             stagingAllocation
         );
-          << "1" << std::endl;
 
         // Device-local vertex buffer
         vulkan::buffer.createBuffer(
@@ -62,21 +55,18 @@ namespace renderer {
             model.vertexBufferAllocation
         );
 
-          << "1" << std::endl;
         // Copy staging buffer to vertex buffer
         vulkan::buffer.copyBuffer(
             stagingBuffer,
             model.vertexBuffer,
             bufferSize
         );
-          << "1" << std::endl;
 
         // Destroy staging buffer
         vulkan::buffer.destroyBuffer(
             stagingBuffer,
             stagingAllocation
         );
-          << "2" << std::endl;
     }
 
 }

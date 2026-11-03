@@ -15,7 +15,6 @@ namespace renderer {
         glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
         mainScale = ImGui_ImplGlfw_GetContentScaleForMonitor(glfwGetPrimaryMonitor()); 
 
-          << mainScale << std::endl;
 
         mainWindow = glfwCreateWindow(
             width,
