@@ -11,10 +11,15 @@ cmake --build build --config Debug --parallel
 
 if errorlevel 1 exit /b 1
 
-glslc assets/shaders/shader.frag -o assets/shaders/frag.spv
+REM
+xcopy /E /I /Y "assets" "build\assets"
 if errorlevel 1 exit /b 1
 
-glslc assets/shaders/shader.vert -o assets/shaders/vert.spv
+REM
+glslc build/assets/shaders/shader.frag -o build/assets/shaders/frag.spv
+if errorlevel 1 exit /b 1
+
+glslc build/assets/shaders/shader.vert -o build/assets/shaders/vert.spv
 if errorlevel 1 exit /b 1
 
 endlocal
