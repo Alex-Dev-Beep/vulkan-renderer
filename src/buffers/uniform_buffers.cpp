@@ -3,33 +3,34 @@
 
 #include <cstring>
 #include <chrono>
+#include <stdexcept>
 
 namespace renderer {
     void uniformBuffers::createUniformBuffers() {
         VkDeviceSize bufferSize = sizeof(UniformBufferObject);
 
-        vulkan::uniformBuffers.vkUniformBuffers.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
-        vulkan::uniformBuffers.uniformBuffersMemory.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
-        vulkan::uniformBuffers.uniformBuffersMapped.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        vkUniformBuffers.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersAllocation.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        uniformBuffersMapped.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
 
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
             vulkan::buffer.createBuffer(
-                bufferSize, 
-                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, 
-                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | 
-                VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, 
-                vkUniformBuffers[i], 
-                uniformBuffersMemory[i]
+                bufferSize,
+                VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_RANDOM_BIT,
+                vkUniformBuffers[i],
+                uniformBuffersAllocation[i]
             );
 
-            vkMapMemory(
-                vulkan::logicalDevice.get(), 
-                vulkan::uniformBuffers.uniformBuffersMemory[i], 
-                0, 
-                bufferSize, 
-                0, 
-                &vulkan::uniformBuffers.uniformBuffersMapped[i]
+            VkResult result = vmaMapMemory(
+                vulkan::memoryAllocator.get(),
+                uniformBuffersAllocation[i],
+                &uniformBuffersMapped[i]
             );
+
+            if (result != VK_SUCCESS) {
+                throw std::runtime_error("failed to map uniform buffer memory!");
+            }
         }
     }
 
@@ -52,8 +53,8 @@ namespace renderer {
         return vkUniformBuffers;
     }
 
-    std::vector<VkDeviceMemory> uniformBuffers::getUniformBuffersMemory() const {
-        return uniformBuffersMemory;
+    std::vector<VmaAllocation> uniformBuffers::getUniformBuffersAllocation() const {
+        return uniformBuffersAllocation;
     }
 
     std::vector<void*> uniformBuffers::getUniformBuffersMapped() const {

@@ -1,26 +1,31 @@
+
 #pragma once
 
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 
+#include <vk_mem_alloc.h>
+
 namespace renderer {
+
     class resourceImage {
-        public:
-        VkImage image;
-        VkDeviceMemory imageMemory;
-        VkImageView imageView;
+    public:
+        VkImage image{};
+        VmaAllocation allocation{};
+        VkImageView imageView{};
     };
 
     class resources {
-        public:
+    public:
         void createColorResources();
         void createDepthResources();
 
         resourceImage getColorImage() const;
         resourceImage getDepthImage() const;
 
-        private:
-        inline static resourceImage colorImage;
-        inline static resourceImage depthImage;
+    private:
+        inline static resourceImage colorImage{};
+        inline static resourceImage depthImage{};
     };
+
 }

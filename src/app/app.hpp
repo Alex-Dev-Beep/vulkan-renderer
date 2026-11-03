@@ -1,5 +1,6 @@
 #pragma once
 
+#include "memory/memory.hpp"
 class App {
     public:
     void run();
@@ -26,6 +27,8 @@ class App {
 #include <buffers/buffer.hpp>
 #include <buffers/uniform_buffers.hpp>
 
+#include <vk_mem_alloc.h>
+
 class vulkan {
     public:
     inline static renderer::instance instance;
@@ -48,6 +51,7 @@ class vulkan {
     inline static renderer::descriptorPool descriptorPool;
     inline static renderer::uniformBuffers uniformBuffers;
     inline static renderer::descriptorSets descriptorSets;
+    inline static renderer::memoryAllocator memoryAllocator;
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
     inline static std::vector<VkSemaphore> imageAvailableSemaphores;
     inline static std::vector<VkSemaphore> renderFinishedSemaphores;

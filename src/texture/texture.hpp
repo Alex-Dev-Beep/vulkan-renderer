@@ -7,14 +7,19 @@
 #include <vector>
 #include <string>
 
+#include <vk_mem_alloc.h>
+
 namespace renderer {
     class texture {
-        public:
-        uint32_t mipLevels;
-        VkImage textureImage;
-        VkDeviceMemory textureImageMemory;
-        VkImageView textureImageView;
-        VkSampler textureSampler;
+    public:
+        uint32_t mipLevels{};
+
+        VkImage textureImage{};
+        VkImageView textureImageView{};
+        VkSampler textureSampler{};
+
+        VmaAllocation textureImageAllocation{};
+
         std::string path;
     };
 

@@ -108,6 +108,8 @@ add_executable(renderer
     src/app/app.hpp
     src/imgui/imgui_integration.hpp
     src/imgui/imgui_integration.cpp
+    src/memory/memory.hpp
+    src/memory/memory.cpp
 )
 
 target_link_libraries(renderer PRIVATE
@@ -122,6 +124,7 @@ target_include_directories(renderer PRIVATE
     thirdparty/stb
     thirdparty/glm
     thirdparty/glfw/include
+    thirdparty/vma
     include
     src
 )

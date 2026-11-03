@@ -1,27 +1,82 @@
-#include "vertex_buffer.hpp"
+
+#include <buffers/vertex_buffer.hpp>
 #include <app/app.hpp>
 #include <mesh/model.hpp>
 
 #include <cstring>
+#include <stdexcept>
+#include <iostream>
 
 namespace renderer {
+
     void createVertexBuffer(mesh& model) {
+          << "1" << std::endl;
         VkDeviceSize bufferSize = sizeof(model.vertices[0]) * model.vertices.size();
+          << "1" << std::endl;
 
+        // Staging buffer
         VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        VmaAllocation stagingAllocation;
 
-        void* data;
-        vkMapMemory(vulkan::logicalDevice.get(), stagingBufferMemory, 0, bufferSize, 0, &data);
-            memcpy(data, model.vertices.data(), (size_t) bufferSize);
-        vkUnmapMemory(vulkan::logicalDevice.get(), stagingBufferMemory);
+        vulkan::buffer.createBuffer(
+            bufferSize,
+            VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+            VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+            stagingBuffer,
+            stagingAllocation
+        );
+          << "1" << std::endl;
 
-        vulkan::buffer.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, model.vertexBuffer, model.vertexBufferMemory);
+        // Copy vertex data to staging buffer
+        void* data = nullptr;
 
-        vulkan::buffer.copyBuffer(stagingBuffer, model.vertexBuffer, bufferSize);
+        VkResult result = vmaMapMemory(
+            vulkan::memoryAllocator.get(),
+            stagingAllocation,
+            &data
+        );
+          << "1" << std::endl;
 
-        vkDestroyBuffer(vulkan::logicalDevice.get(), stagingBuffer, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), stagingBufferMemory, nullptr);
+        if (result != VK_SUCCESS) {
+            vulkan::buffer.destroyBuffer(stagingBuffer, stagingAllocation);
+            throw std::runtime_error("Failed to map staging buffer!");
+        }
+          << "1" << std::endl;
+
+        std::memcpy(data, model.vertices.data(), static_cast<size_t>(bufferSize));
+          << "1" << std::endl;
+
+        vmaUnmapMemory(
+            vulkan::memoryAllocator.get(),
+            stagingAllocation
+        );
+          << "1" << std::endl;
+
+        // Device-local vertex buffer
+        vulkan::buffer.createBuffer(
+            bufferSize,
+            VK_BUFFER_USAGE_TRANSFER_DST_BIT |
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+            0,
+            model.vertexBuffer,
+            model.vertexBufferAllocation
+        );
+
+          << "1" << std::endl;
+        // Copy staging buffer to vertex buffer
+        vulkan::buffer.copyBuffer(
+            stagingBuffer,
+            model.vertexBuffer,
+            bufferSize
+        );
+          << "1" << std::endl;
+
+        // Destroy staging buffer
+        vulkan::buffer.destroyBuffer(
+            stagingBuffer,
+            stagingAllocation
+        );
+          << "2" << std::endl;
     }
+
 }

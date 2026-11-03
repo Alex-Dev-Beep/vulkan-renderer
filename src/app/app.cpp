@@ -11,6 +11,8 @@
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
 
+#include <iostream>
+
 void App::run() {
     initVulkan();
     mainLoop();
@@ -23,6 +25,7 @@ void App::initVulkan() {
     vulkan::surface.createSurface();
     vulkan::physicalDevice.pickPhysicalDevice();
     vulkan::logicalDevice.createLogicalDevice();
+    vulkan::memoryAllocator.createAllocator();
     vulkan::swapchain.createSwapChain();
     vulkan::imageViews.createImageViews();
     vulkan::renderPass.createRenderPass();
@@ -36,15 +39,18 @@ void App::initVulkan() {
     renderer::texture vikingRoomTexture;
     vikingRoomTexture.path = "assets/textures/viking_room.png";
 
+
     renderer::createTexture(vikingRoomTexture);
-        
+
     renderer::mesh vikingRoom;
     vikingRoom.path = "assets/models/viking_room.obj";
     
     renderer::createModel(vikingRoom);
     renderer::meshes.push_back(vikingRoom);
 
+
     vulkan::uniformBuffers.createUniformBuffers();
+
     vulkan::descriptorPool.createDescriptorPool();
     vulkan::descriptorSets.createDescriptorSets();
     vulkan::commandBuffer.createCommandBuffers();

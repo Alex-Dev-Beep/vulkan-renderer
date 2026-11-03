@@ -13,74 +13,54 @@
 namespace renderer {
 
     void cleanupSwapChain() {
+        VkDevice device = vulkan::logicalDevice.get();
+
         // Framebuffers
         for (auto framebuffer : vulkan::swapchain.getFramebuffers()) {
-            vkDestroyFramebuffer(
-                vulkan::logicalDevice.get(),
-                framebuffer,
-                nullptr
-            );
+            vkDestroyFramebuffer(device, framebuffer, nullptr);
         }
 
         // Depth image
-        vkDestroyImageView(
-            vulkan::logicalDevice.get(),
-            vulkan::resources.getDepthImage().imageView,
-            nullptr
-        );
+        // vulkan::resources.get()
 
-        vkDestroyImage(
-            vulkan::logicalDevice.get(),
+        vkDestroyImageView(device, vulkan::resources.getDepthImage().imageView, nullptr);
+
+        vmaDestroyImage(
+            vulkan::memoryAllocator.get(),
             vulkan::resources.getDepthImage().image,
-            nullptr
-        );
-
-        vkFreeMemory(
-            vulkan::logicalDevice.get(),
-            vulkan::resources.getDepthImage().imageMemory,
-            nullptr
+            vulkan::resources.getDepthImage().allocation
         );
 
         // Color image
-        vkDestroyImageView(
-            vulkan::logicalDevice.get(),
-            vulkan::resources.getColorImage().imageView,
-            nullptr
-        );
+        // vulkan::resources.getvulkan::resources.getColorImage()()
 
-        vkDestroyImage(
-            vulkan::logicalDevice.get(),
+        vkDestroyImageView(device, vulkan::resources.getColorImage().imageView, nullptr);
+
+        vmaDestroyImage(
+            vulkan::memoryAllocator.get(),
             vulkan::resources.getColorImage().image,
-            nullptr
-        );
-
-        vkFreeMemory(
-            vulkan::logicalDevice.get(),
-            vulkan::resources.getColorImage().imageMemory,
-            nullptr
+            vulkan::resources.getColorImage().allocation
         );
 
         // Swapchain image views
         for (auto imageView : vulkan::swapchain.getImageViews()) {
-            vkDestroyImageView(
-                vulkan::logicalDevice.get(),
-                imageView,
-                nullptr
-            );
+            vkDestroyImageView(device, imageView, nullptr);
         }
 
         // Swapchain
         vkDestroySwapchainKHR(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::swapchain.get(),
             nullptr
         );
     }
 
     void cleanup() {
+        VkDevice device = vulkan::logicalDevice.get();
+        VmaAllocator allocator = vulkan::memoryAllocator.get();
 
         // Wait for GPU
-        vkDeviceWaitIdle(vulkan::logicalDevice.get());
+        vkDeviceWaitIdle(device);
 
         // ImGui
         ImGui_ImplVulkan_Shutdown();
@@ -92,36 +72,29 @@ namespace renderer {
 
         // Graphics pipeline
         vkDestroyPipeline(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::graphicsPipeline.get(),
             nullptr
         );
 
         vkDestroyPipelineLayout(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::graphicsPipeline.getLayout(),
             nullptr
         );
 
         // Render pass
         vkDestroyRenderPass(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::renderPass.get(),
             nullptr
         );
 
         // Uniform buffers
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
-            vkDestroyBuffer(
-                vulkan::logicalDevice.get(),
+            vulkan::buffer.destroyBuffer(
                 vulkan::uniformBuffers.getUniformBuffers()[i],
-                nullptr
-            );
-
-            vkFreeMemory(
-                vulkan::logicalDevice.get(),
-                vulkan::uniformBuffers.getUniformBuffersMemory()[i],
-                nullptr
+                vulkan::uniformBuffers.getUniformBuffersAllocation()[i]
             );
         }
 
@@ -129,74 +102,54 @@ namespace renderer {
         for (const renderer::texture& tex : renderer::textures) {
 
             vkDestroySampler(
-                vulkan::logicalDevice.get(),
+                device,
                 tex.textureSampler,
                 nullptr
             );
 
             vkDestroyImageView(
-                vulkan::logicalDevice.get(),
+                device,
                 tex.textureImageView,
                 nullptr
             );
 
-            vkDestroyImage(
-                vulkan::logicalDevice.get(),
+            vmaDestroyImage(
+                allocator,
                 tex.textureImage,
-                nullptr
-            );
-
-            vkFreeMemory(
-                vulkan::logicalDevice.get(),
-                tex.textureImageMemory,
-                nullptr
+                tex.textureImageAllocation
             );
         }
 
         // Meshes
         for (const renderer::mesh& model : renderer::meshes) {
 
-            vkDestroyBuffer(
-                vulkan::logicalDevice.get(),
+            vulkan::buffer.destroyBuffer(
                 model.indexBuffer,
-                nullptr
+                model.indexBufferAllocation
             );
 
-            vkFreeMemory(
-                vulkan::logicalDevice.get(),
-                model.indexBufferMemory,
-                nullptr
-            );
-
-            vkDestroyBuffer(
-                vulkan::logicalDevice.get(),
+            vulkan::buffer.destroyBuffer(
                 model.vertexBuffer,
-                nullptr
-            );
-
-            vkFreeMemory(
-                vulkan::logicalDevice.get(),
-                model.vertexBufferMemory,
-                nullptr
+                model.vertexBufferAllocation
             );
         }
 
         // Descriptor pools
         vkDestroyDescriptorPool(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::descriptorPool.getImguiPool(),
             nullptr
         );
 
         vkDestroyDescriptorPool(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::descriptorPool.get(),
             nullptr
         );
 
         // Descriptor set layout
         vkDestroyDescriptorSetLayout(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::descriptorSetLayout.get(),
             nullptr
         );
@@ -205,36 +158,36 @@ namespace renderer {
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
 
             vkDestroySemaphore(
-                vulkan::logicalDevice.get(),
+                device,
                 vulkan::renderFinishedSemaphores[i],
                 nullptr
             );
 
             vkDestroySemaphore(
-                vulkan::logicalDevice.get(),
+                device,
                 vulkan::imageAvailableSemaphores[i],
                 nullptr
             );
 
             vkDestroyFence(
-                vulkan::logicalDevice.get(),
+                device,
                 vulkan::inFlightFences[i],
                 nullptr
             );
         }
 
-        // Command pool (also destroys allocated command buffers)
+        // Command pool
         vkDestroyCommandPool(
-            vulkan::logicalDevice.get(),
+            device,
             vulkan::commandPool.get(),
             nullptr
         );
 
+        // VMA allocator
+        vmaDestroyAllocator(allocator);
+
         // Logical device
-        vkDestroyDevice(
-            vulkan::logicalDevice.get(),
-            nullptr
-        );
+        vkDestroyDevice(device, nullptr);
 
         // Debug messenger
         if (enableValidationLayers) {
@@ -262,4 +215,5 @@ namespace renderer {
         glfwDestroyWindow(renderer::mainWindow.get());
         glfwTerminate();
     }
+
 }

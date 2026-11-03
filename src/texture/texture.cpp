@@ -19,37 +19,156 @@ namespace renderer {
     }
 
     void createTextureImage(texture& tex) {
-        int texWidth, texHeight, texChannels;
-        stbi_uc* pixels = stbi_load(tex.path.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
-        VkDeviceSize imageSize = texWidth * texHeight * 4;
-        tex.mipLevels = static_cast<uint32_t>(std::floor(std::log2(std::max(texWidth, texHeight)))) + 1;
+        int texWidth = 0;
+        int texHeight = 0;
+        int texChannels = 0;
+
+        stbi_uc* pixels = stbi_load(
+            tex.path.c_str(),
+            &texWidth,
+            &texHeight,
+            &texChannels,
+            STBI_rgb_alpha
+        );
 
         if (!pixels) {
-            throw std::runtime_error("failed to load texture image!");
+            throw std::runtime_error("Failed to load texture image!");
         }
 
-        VkBuffer stagingBuffer;
-        VkDeviceMemory stagingBufferMemory;
-        vulkan::buffer.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        if (texWidth <= 0 || texHeight <= 0) {
+            stbi_image_free(pixels);
+            throw std::runtime_error("Invalid texture dimensions!");
+        }
 
-        void* data;
-        vkMapMemory(vulkan::logicalDevice.get(), stagingBufferMemory, 0, imageSize, 0, &data);
-            memcpy(data, pixels, static_cast<size_t>(imageSize));
-        vkUnmapMemory(vulkan::logicalDevice.get(), stagingBufferMemory);
+        const VkDeviceSize imageSize =
+            static_cast<VkDeviceSize>(texWidth) *
+            static_cast<VkDeviceSize>(texHeight) * 4;
 
-        stbi_image_free(pixels);
+        tex.mipLevels =
+            static_cast<uint32_t>(
+                std::floor(
+                    std::log2(std::max(texWidth, texHeight))
+                )
+            ) + 1;
 
-        vulkan::image.createImage(texWidth, texHeight, tex.mipLevels, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, tex.textureImage, tex.textureImageMemory);
+        VkBuffer stagingBuffer{};
+        VmaAllocation stagingAllocation{};
 
-        vulkan::image.transitionImageLayout(tex.textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, tex.mipLevels);
-        vulkan::image.copyBufferToImage(stagingBuffer, tex.textureImage, static_cast<uint32_t>(texWidth), static_cast<uint32_t>(texHeight));
-        //transitioned to VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL while generating mipmaps
+        try {
+            // Create staging buffer
+            vulkan::buffer.createBuffer(
+                imageSize,
+                VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT,
+                stagingBuffer,
+                stagingAllocation
+            );
 
-        vkDestroyBuffer(vulkan::logicalDevice.get(), stagingBuffer, nullptr);
-        vkFreeMemory(vulkan::logicalDevice.get(), stagingBufferMemory, nullptr);
+            // Map staging memory
+            void* data = nullptr;
 
-        generateMipmaps(tex.textureImage, VK_FORMAT_R8G8B8A8_SRGB, texWidth, texHeight, tex.mipLevels);
+            VkResult result = vmaMapMemory(
+                vulkan::memoryAllocator.get(),
+                stagingAllocation,
+                &data
+            );
+
+            if (result != VK_SUCCESS) {
+                throw std::runtime_error("Failed to map staging buffer!");
+            }
+
+            std::memcpy(
+                data,
+                pixels,
+                static_cast<size_t>(imageSize)
+            );
+
+            vmaUnmapMemory(
+                vulkan::memoryAllocator.get(),
+                stagingAllocation
+            );
+
+            stbi_image_free(pixels);
+            pixels = nullptr;
+
+            // Create texture image
+            vulkan::image.createImage(
+                texWidth,
+                texHeight,
+                tex.mipLevels,
+                VK_SAMPLE_COUNT_1_BIT,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_TILING_OPTIMAL,
+                VK_IMAGE_USAGE_TRANSFER_SRC_BIT |
+                VK_IMAGE_USAGE_TRANSFER_DST_BIT |
+                VK_IMAGE_USAGE_SAMPLED_BIT,
+                0,
+                tex.textureImage,
+                tex.textureImageAllocation
+            );
+
+            // Transition image layout
+            vulkan::image.transitionImageLayout(
+                tex.textureImage,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                VK_IMAGE_LAYOUT_UNDEFINED,
+                VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+                tex.mipLevels
+            );
+
+            // Copy staging buffer to image
+            vulkan::image.copyBufferToImage(
+                stagingBuffer,
+                tex.textureImage,
+                static_cast<uint32_t>(texWidth),
+                static_cast<uint32_t>(texHeight)
+            );
+
+            // Destroy staging buffer
+            vulkan::buffer.destroyBuffer(
+                stagingBuffer,
+                stagingAllocation
+            );
+
+            stagingBuffer = VK_NULL_HANDLE;
+            stagingAllocation = VK_NULL_HANDLE;
+
+            // Generate mipmaps
+            generateMipmaps(
+                tex.textureImage,
+                VK_FORMAT_R8G8B8A8_SRGB,
+                texWidth,
+                texHeight,
+                tex.mipLevels
+            );
+        }
+        catch (...) {
+            if (pixels) {
+                stbi_image_free(pixels);
+            }
+
+            if (stagingBuffer != VK_NULL_HANDLE) {
+                vulkan::buffer.destroyBuffer(
+                    stagingBuffer,
+                    stagingAllocation
+                );
+            }
+
+            if (tex.textureImage != VK_NULL_HANDLE) {
+                vmaDestroyImage(
+                    vulkan::memoryAllocator.get(),
+                    tex.textureImage,
+                    tex.textureImageAllocation
+                );
+
+                tex.textureImage = VK_NULL_HANDLE;
+                tex.textureImageAllocation = VK_NULL_HANDLE;
+            }
+
+            throw;
+        }
     }
+
 
     void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
         // Check if image format supports linear blitting

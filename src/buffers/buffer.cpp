@@ -1,41 +1,74 @@
 #include <buffers/buffer.hpp>
 #include <app/app.hpp>
 
+#include <buffers/buffer.hpp>
+#include <memory/memory.hpp>
+#include <commands/command_buffer.hpp>
+
 #include <stdexcept>
+#include <iostream>
+#include <vulkan/vulkan_core.h>
 
 namespace renderer {
-    void buffer::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory) {
+    void buffer::createBuffer(
+        VkDeviceSize size,
+        VkBufferUsageFlags usage,
+        VmaAllocationCreateFlags flags,
+        VkBuffer& buffer,
+        VmaAllocation& allocation
+    ) {
         VkBufferCreateInfo bufferInfo{};
         bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         bufferInfo.size = size;
         bufferInfo.usage = usage;
         bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateBuffer(vulkan::logicalDevice.get(), &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create buffer!");
+        VmaAllocationCreateInfo allocInfo{};
+        allocInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        allocInfo.flags = flags;
+
+        if (flags & VMA_ALLOCATION_CREATE_MAPPED_BIT) {
+            allocInfo.flags |=
+                VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
         }
 
-        VkMemoryRequirements memRequirements;
-        vkGetBufferMemoryRequirements(vulkan::logicalDevice.get(), buffer, &memRequirements);
+        VkResult result = vmaCreateBuffer(
+            vulkan::memoryAllocator.get(),
+            &bufferInfo,
+            &allocInfo,
+            &buffer,
+            &allocation,
+            nullptr
+        );
 
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = vulkan::image.findMemoryType(memRequirements.memoryTypeBits, properties);
+        vulkan::memoryAllocator.checkVmaResult(
+            result,
+            "vmaCreateBuffer"
+        );
+    }
 
-        if (vkAllocateMemory(vulkan::logicalDevice.get(), &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate buffer memory!");
-        }
-
-        vkBindBufferMemory(vulkan::logicalDevice.get(), buffer, bufferMemory, 0);
+    void buffer::destroyBuffer(VkBuffer buffer, VmaAllocation allocation) {
+        vmaDestroyBuffer(
+            vulkan::memoryAllocator.get(),
+            buffer,
+            allocation
+        );
     }
 
     void buffer::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) {
-        VkCommandBuffer commandBuffer = vulkan::commandBuffer.beginSingleTimeCommands();
+        VkCommandBuffer commandBuffer =
+            vulkan::commandBuffer.beginSingleTimeCommands();
 
         VkBufferCopy copyRegion{};
         copyRegion.size = size;
-        vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
+
+        vkCmdCopyBuffer(
+            commandBuffer,
+            srcBuffer,
+            dstBuffer,
+            1,
+            &copyRegion
+        );
 
         vulkan::commandBuffer.endSingleTimeCommands(commandBuffer);
     }

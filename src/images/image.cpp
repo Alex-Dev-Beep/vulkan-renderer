@@ -17,7 +17,18 @@ namespace renderer {
         throw std::runtime_error("failed to find suitable memory type!");
     }
 
-    void image::createImage(uint32_t width, uint32_t height, uint32_t mipLevels, VkSampleCountFlagBits numSamples, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory) {
+    void image::createImage(
+        uint32_t width,
+        uint32_t height,
+        uint32_t mipLevels,
+        VkSampleCountFlagBits numSamples,
+        VkFormat format,
+        VkImageTiling tiling,
+        VkImageUsageFlags usage,
+        VkMemoryPropertyFlags properties,
+        VkImage& image,
+        VmaAllocation& allocation
+    ) {
         VkImageCreateInfo imageInfo{};
         imageInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
         imageInfo.imageType = VK_IMAGE_TYPE_2D;
@@ -33,23 +44,36 @@ namespace renderer {
         imageInfo.samples = numSamples;
         imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-        if (vkCreateImage(vulkan::logicalDevice.get(), &imageInfo, nullptr, &image) != VK_SUCCESS) {
+        VmaAllocationCreateInfo allocationInfo{};
+        allocationInfo.usage = VMA_MEMORY_USAGE_AUTO;
+        allocationInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+
+        if (properties & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) {
+            allocationInfo.flags |= VMA_ALLOCATION_CREATE_HOST_ACCESS_SEQUENTIAL_WRITE_BIT;
+        }
+
+        if (properties & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) {
+            allocationInfo.requiredFlags |= VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+        }
+
+        if (properties & VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT) {
+            allocationInfo.requiredFlags |= VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT;
+        }
+
+        VkResult result = vmaCreateImage(
+            vulkan::memoryAllocator.get(),
+            &imageInfo,
+            &allocationInfo,
+            &image,
+            &allocation,
+            nullptr
+        );
+
+        vulkan::memoryAllocator.checkVmaResult(result, "vmaCreateImage");
+
+        if (result != VK_SUCCESS) {
             throw std::runtime_error("failed to create image!");
         }
-
-        VkMemoryRequirements memRequirements;
-        vkGetImageMemoryRequirements(vulkan::logicalDevice.get(), image, &memRequirements);
-
-        VkMemoryAllocateInfo allocInfo{};
-        allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-        allocInfo.allocationSize = memRequirements.size;
-        allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
-
-        if (vkAllocateMemory(vulkan::logicalDevice.get(), &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-            throw std::runtime_error("failed to allocate image memory!");
-        }
-
-        vkBindImageMemory(vulkan::logicalDevice.get(), image, imageMemory, 0);
     }
 
     void image::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels) {
