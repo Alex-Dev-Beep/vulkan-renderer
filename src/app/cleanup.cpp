@@ -92,6 +92,11 @@ namespace renderer {
 
         // Uniform buffers
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
+            vmaUnmapMemory(
+                vulkan::memoryAllocator.get(),
+                vulkan::uniformBuffers.getUniformBuffersAllocation()[i]
+            );
+
             vulkan::buffer.destroyBuffer(
                 vulkan::uniformBuffers.getUniformBuffers()[i],
                 vulkan::uniformBuffers.getUniformBuffersAllocation()[i]
