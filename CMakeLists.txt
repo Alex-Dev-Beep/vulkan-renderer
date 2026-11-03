@@ -23,6 +23,7 @@ add_library(imgui STATIC
     ${IMGUI_DIR}/imgui_draw.cpp
     ${IMGUI_DIR}/imgui_tables.cpp
     ${IMGUI_DIR}/imgui_widgets.cpp
+    ${IMGUI_DIR}/imgui_demo.cpp
 
     # GLFW backend
     ${IMGUI_DIR}/backends/imgui_impl_glfw.cpp
@@ -105,6 +106,8 @@ add_executable(renderer
     src/renderer/renderer.cpp
     src/app/app.cpp
     src/app/app.hpp
+    src/imgui/imgui_integration.hpp
+    src/imgui/imgui_integration.cpp
 )
 
 target_link_libraries(renderer PRIVATE

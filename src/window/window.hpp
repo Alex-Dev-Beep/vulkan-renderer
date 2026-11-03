@@ -30,4 +30,5 @@ namespace renderer {
     };
 
     extern window mainWindow;
+    inline float mainScale;
 }

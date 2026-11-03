@@ -5,6 +5,11 @@
 #include <sync/sync.hpp>
 #include <window/window.hpp>
 #include <renderer/renderer.hpp>
+#include <imgui/imgui_integration.hpp>
+
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_glfw.h>
 
 void App::run() {
     initVulkan();
@@ -44,11 +49,14 @@ void App::initVulkan() {
     vulkan::descriptorSets.createDescriptorSets();
     vulkan::commandBuffer.createCommandBuffers();
     renderer::createSyncObjects();
+
+    initializeImGuiVulkan();
 }
 
 void App::mainLoop() {
     while (!glfwWindowShouldClose(renderer::mainWindow.get())) {
         glfwPollEvents();
+
         renderer::drawFrame();
     }
 

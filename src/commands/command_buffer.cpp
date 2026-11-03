@@ -3,6 +3,9 @@
 #include <mesh/model.hpp>
 
 #include <stdexcept>
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_glfw.h>
 
 namespace renderer {
     VkCommandBuffer commandBuffer::beginSingleTimeCommands() {
@@ -119,8 +122,6 @@ namespace renderer {
                 commandBuffer, 0, 1, vertexBuffers, offsets
             );
 
-            
-
             vkCmdBindIndexBuffer(
                 commandBuffer,
                 mesh.indexBuffer,
@@ -148,6 +149,14 @@ namespace renderer {
                 0
             );
         }
+
+        ImGui_ImplVulkan_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+        ImGui::ShowDemoWindow(); // Show demo window! :)
+
+        ImGui::Render();
+        ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);
 
         vkCmdEndRenderPass(commandBuffer);
 
