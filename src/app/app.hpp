@@ -55,6 +55,7 @@ class vulkan {
     inline static VkSampleCountFlagBits msaaSamples = VK_SAMPLE_COUNT_1_BIT;
     inline static std::vector<VkSemaphore> imageAvailableSemaphores;
     inline static std::vector<VkSemaphore> renderFinishedSemaphores;
+    inline static std::vector<VkSemaphore> swapchainSemaphores;
     inline static std::vector<VkFence> inFlightFences;
     inline static const int MAX_FRAMES_IN_FLIGHT = 2;
     inline static uint32_t currentFrame = 0;

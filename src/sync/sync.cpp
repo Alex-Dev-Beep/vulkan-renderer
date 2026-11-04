@@ -8,8 +8,11 @@
 
 namespace renderer {
     void createSyncObjects() {
-        vulkan::imageAvailableSemaphores.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
-        vulkan::renderFinishedSemaphores.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
+        const size_t imageCount = vulkan::swapchain.getImageCount();
+
+        vulkan::imageAvailableSemaphores.resize(imageCount);
+        vulkan::swapchainSemaphores.resize(imageCount);
+        vulkan::renderFinishedSemaphores.resize(imageCount);
         vulkan::inFlightFences.resize(vulkan::MAX_FRAMES_IN_FLIGHT);
 
         VkSemaphoreCreateInfo semaphoreInfo{};
@@ -19,11 +22,23 @@ namespace renderer {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
+        // Por IMAGEN del swapchain
+        for (size_t i = 0; i < imageCount; i++) {
+            if (vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo,
+                                nullptr, &vulkan::imageAvailableSemaphores[i]) != VK_SUCCESS ||
+                vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo,
+                                nullptr, &vulkan::swapchainSemaphores[i]) != VK_SUCCESS ||
+                vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo,
+                                nullptr, &vulkan::renderFinishedSemaphores[i]) != VK_SUCCESS) {  // ← aquí
+                throw std::runtime_error("failed to create per-image semaphores");
+            }
+        }
+
+        // Por FRAME en vuelo (solo el fence)
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
-            if (vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo, nullptr, &vulkan::imageAvailableSemaphores[i]) != VK_SUCCESS ||
-                vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo, nullptr, &vulkan::renderFinishedSemaphores[i]) != VK_SUCCESS ||
-                vkCreateFence(vulkan::logicalDevice.get(), &fenceInfo, nullptr, &vulkan::inFlightFences[i]) != VK_SUCCESS) {
-                throw std::runtime_error("failed to create synchronization objects for a frame!");
+            if (vkCreateFence(vulkan::logicalDevice.get(), &fenceInfo,
+                            nullptr, &vulkan::inFlightFences[i]) != VK_SUCCESS) {
+                throw std::runtime_error("failed to create per-frame fences");
             }
         }
     }

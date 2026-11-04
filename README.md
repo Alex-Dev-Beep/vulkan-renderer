@@ -15,11 +15,11 @@ All project dependencies (such as GLM, GLFW, and stb_image) are included in the 
 #### Build Instructions:
 
 ##### Windows:
-1. At the root of the project, run 'build_and_run_windows.bat'.
+1. At the root of the project, run 'build_windows.bat'.
 
 ##### Linux:
-1. At the root of the project, run 'chmod +x build_and_run_linux.sh'.
-2. Run './build_and_run_linux.sh'.
+1. At the root of the project, run 'chmod +x build_unix.sh'.
+2. Run './build_unix.sh'.
 
 #### Run Instructions:
 

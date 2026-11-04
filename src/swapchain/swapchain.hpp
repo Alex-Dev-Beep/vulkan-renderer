@@ -27,6 +27,7 @@ namespace renderer {
         const std::vector<VkImage>& getImages() const;
         VkFormat getImageFormat() const;
         VkExtent2D getExtent() const;
+        size_t getImageCount() const { return swapChainImages.size(); }
         std::vector<VkImageView>& getImageViews();
         std::vector<VkFramebuffer>& getFramebuffers();
 
