@@ -48,9 +48,7 @@ void App::initVulkan() {
     renderer::createModel(vikingRoom);
     renderer::meshes.push_back(vikingRoom);
 
-
     vulkan::uniformBuffers.createUniformBuffers();
-
     vulkan::descriptorPool.createDescriptorPool();
     vulkan::descriptorSets.createDescriptorSets();
     vulkan::commandBuffer.createCommandBuffers();

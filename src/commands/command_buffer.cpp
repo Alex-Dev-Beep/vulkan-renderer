@@ -6,6 +6,7 @@
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
+#include <imgui/ui.hpp>
 
 namespace renderer {
     VkCommandBuffer commandBuffer::beginSingleTimeCommands() {
@@ -150,10 +151,7 @@ namespace renderer {
             );
         }
 
-        ImGui_ImplVulkan_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
-        ImGui::ShowDemoWindow(); // Show demo window! :)
+        draw();
 
         ImGui::Render();
         ImGui_ImplVulkan_RenderDrawData(ImGui::GetDrawData(), commandBuffer);

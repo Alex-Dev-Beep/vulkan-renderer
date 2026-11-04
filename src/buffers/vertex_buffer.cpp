@@ -5,7 +5,6 @@
 
 #include <cstring>
 #include <stdexcept>
-#include <iostream>
 
 namespace renderer {
 

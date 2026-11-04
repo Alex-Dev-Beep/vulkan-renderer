@@ -110,6 +110,8 @@ add_executable(renderer
     src/imgui/imgui_integration.cpp
     src/memory/memory.hpp
     src/memory/memory.cpp
+    src/imgui/ui.hpp
+    src/imgui/ui.cpp
 )
 
 target_link_libraries(renderer PRIVATE
