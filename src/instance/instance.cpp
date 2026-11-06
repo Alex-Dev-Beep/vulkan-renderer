@@ -3,6 +3,7 @@
 #include <instance/instance.hpp>
 #include <stdexcept>
 #include <vulkan/vulkan_core.h>
+#include <iostream>
 
 namespace renderer {
 
@@ -11,10 +12,11 @@ namespace renderer {
     }
 
     void instance::createInstance() {
+        std::cout << "Creating Instance..." << std::endl;
         if (enableValidationLayers && !validationLayers::checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested, but not available!");
         }
-
+        
         VkApplicationInfo appInfo{};
         appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         appInfo.pApplicationName = "Hello Triangle";
@@ -45,8 +47,10 @@ namespace renderer {
         }
 
         if (vkCreateInstance(&createInfo, nullptr, &vkInstance) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create instance!");
+            throw std::runtime_error("Failed to create instance.");
         }
+
+        std::cout << "Successfully created Instance." << std::endl;
     }
 
 }

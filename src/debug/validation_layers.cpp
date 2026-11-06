@@ -48,6 +48,7 @@ namespace renderer {
     }
 
     std::vector<const char*> validationLayers::getRequiredExtensions() {
+        std::cout << "Getting required extensions..." << std::endl;
         uint32_t glfwExtensionCount = 0;
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
@@ -57,6 +58,8 @@ namespace renderer {
         if (enableValidationLayers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
+
+        std::cout << "Succesfully gotten the required extensions." << std::endl;
 
         return extensions;
     }

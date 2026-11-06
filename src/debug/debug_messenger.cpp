@@ -4,17 +4,21 @@
 #include <app/app.hpp>
 
 #include <stdexcept>
+#include <iostream>
 
 namespace renderer {
     void debugMessenger::setupDebugMessenger() {
+        std::cout << "Setting up the debug messenger..." << std::endl;
         if (!enableValidationLayers) return;
 
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
         renderer::validationLayers::populateDebugMessengerCreateInfo(createInfo);
 
         if (renderer::validationLayers::CreateDebugUtilsMessengerEXT(vulkan::instance.get(), &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-            throw std::runtime_error("failed to set up debug messenger!");
+            throw std::runtime_error("Failed to set up debug messenger!");
         }
+
+        std::cout << "Sucesfully set up the debug messenger." << std::endl;
     }
 
     VkDebugUtilsMessengerEXT debugMessenger::get() const {
