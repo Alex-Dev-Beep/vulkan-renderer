@@ -1,11 +1,8 @@
 #include "ui.hpp"
 
-#include <stdio.h>
-
 #include <imgui.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
-#include <imgui/ui.hpp>
 
 void draw()
 {
@@ -15,45 +12,22 @@ void draw()
 
     ImGui::Begin("Debug Window");
 
-    static ImGuiSelectionBasicStorage selection;
+    static int selected = 0;
 
-    constexpr int ITEMS_COUNT = 10;
+    const char* items[] = {
+        "Object 0",
+        "Object 1",
+        "Object 2",
+        "Object 3",
+        "Object 4",
+        "Object 5",
+        "Object 6",
+        "Object 7",
+        "Object 8",
+        "Object 9"
+    };
 
-    char preview[64];
-
-    snprintf(preview, sizeof(preview), "%d selected", selection.Size);
-
-    if (ImGui::BeginCombo("Objects", preview))
-    {
-        ImGuiMultiSelectFlags flags =
-            ImGuiMultiSelectFlags_ClearOnEscape;
-
-        ImGuiMultiSelectIO* ms_io =
-            ImGui::BeginMultiSelect(flags, selection.Size, ITEMS_COUNT);
-
-        selection.ApplyRequests(ms_io);
-
-        for (int i = 0; i < ITEMS_COUNT; ++i)
-        {
-            char label[32];
-            snprintf(label, sizeof(label), "Object %d", i);
-
-            bool selected = selection.Contains(static_cast<ImGuiID>(i));
-
-            ImGui::SetNextItemSelectionUserData(i);
-
-            if (ImGui::Selectable(label, selected))
-            {
-                // La selección la gestiona MultiSelect.
-            }
-        }
-
-        ms_io = ImGui::EndMultiSelect();
-
-        selection.ApplyRequests(ms_io);
-
-        ImGui::EndCombo();
-    }
+    ImGui::Combo("Objects", &selected, items, IM_ARRAYSIZE(items));
 
     ImGui::End();
 
