@@ -1,6 +1,7 @@
 #pragma once
 
 #include "memory/memory.hpp"
+
 class App {
     public:
     void run();
@@ -28,6 +29,7 @@ class App {
 #include <buffers/uniform_buffers.hpp>
 
 #include <vk_mem_alloc.h>
+#include <cstdint>
 
 class vulkan {
     public:
