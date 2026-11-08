@@ -55,7 +55,6 @@ namespace renderer {
         VmaAllocation stagingAllocation{};
 
         try {
-            // Create staging buffer
             vulkan::buffer.createBuffer(
                 imageSize,
                 VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
@@ -64,7 +63,6 @@ namespace renderer {
                 stagingAllocation
             );
 
-            // Map staging memory
             void* data = nullptr;
 
             VkResult result = vmaMapMemory(
@@ -91,7 +89,6 @@ namespace renderer {
             stbi_image_free(pixels);
             pixels = nullptr;
 
-            // Create texture image
             vulkan::image.createImage(
                 texWidth,
                 texHeight,
@@ -107,7 +104,6 @@ namespace renderer {
                 tex.textureImageAllocation
             );
 
-            // Transition image layout
             vulkan::image.transitionImageLayout(
                 tex.textureImage,
                 VK_FORMAT_R8G8B8A8_SRGB,
@@ -116,7 +112,6 @@ namespace renderer {
                 tex.mipLevels
             );
 
-            // Copy staging buffer to image
             vulkan::image.copyBufferToImage(
                 stagingBuffer,
                 tex.textureImage,
@@ -124,7 +119,6 @@ namespace renderer {
                 static_cast<uint32_t>(texHeight)
             );
 
-            // Destroy staging buffer
             vulkan::buffer.destroyBuffer(
                 stagingBuffer,
                 stagingAllocation
@@ -133,7 +127,6 @@ namespace renderer {
             stagingBuffer = VK_NULL_HANDLE;
             stagingAllocation = VK_NULL_HANDLE;
 
-            // Generate mipmaps
             generateMipmaps(
                 tex.textureImage,
                 VK_FORMAT_R8G8B8A8_SRGB,
@@ -171,7 +164,6 @@ namespace renderer {
 
 
     void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels) {
-        // Check if image format supports linear blitting
         VkFormatProperties formatProperties;
         vkGetPhysicalDeviceFormatProperties(vulkan::physicalDevice.get(), imageFormat, &formatProperties);
 

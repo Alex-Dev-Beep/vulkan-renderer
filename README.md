@@ -12,6 +12,12 @@
 
 All project dependencies (such as GLM, GLFW, and stb_image) are included in the repository.
 
+#### Run Instructions (if you have a .zip from the releases):
+
+##### Windows:
+
+1. Simply double-click the executable.
+
 #### Build Instructions:
 
 ##### Windows:

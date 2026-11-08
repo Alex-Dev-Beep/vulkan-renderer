@@ -22,7 +22,6 @@ namespace renderer {
         fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
-        // Por IMAGEN del swapchain
         for (size_t i = 0; i < imageCount; i++) {
             if (vkCreateSemaphore(vulkan::logicalDevice.get(), &semaphoreInfo,
                                 nullptr, &vulkan::imageAvailableSemaphores[i]) != VK_SUCCESS ||
@@ -34,7 +33,6 @@ namespace renderer {
             }
         }
 
-        // Por FRAME en vuelo (solo el fence)
         for (size_t i = 0; i < vulkan::MAX_FRAMES_IN_FLIGHT; i++) {
             if (vkCreateFence(vulkan::logicalDevice.get(), &fenceInfo,
                             nullptr, &vulkan::inFlightFences[i]) != VK_SUCCESS) {

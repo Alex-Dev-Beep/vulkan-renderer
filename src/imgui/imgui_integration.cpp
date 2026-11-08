@@ -19,14 +19,13 @@ void checkVulkanResult(VkResult err) {
 
 void initializeImGuiVulkan() {
     QueueFamilyIndices indices = vulkan::physicalDevice.findQueueFamilies(vulkan::physicalDevice.get());
-    // Setup Dear ImGui context
+
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO();
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;     // Enable Keyboard Controls
-    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;      // Enable Gamepad Controls
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;      
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;       
 
-    // Setup Platform/Renderer backends
     ImGui_ImplGlfw_InitForVulkan(renderer::mainWindow.get(), true);
     ImGui_ImplVulkan_InitInfo initInfo = {};
     initInfo.Instance = vulkan::instance.get();

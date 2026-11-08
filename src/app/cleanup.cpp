@@ -15,13 +15,9 @@ namespace renderer {
     void cleanupSwapChain() {
         VkDevice device = vulkan::logicalDevice.get();
 
-        // Framebuffers
         for (auto framebuffer : vulkan::swapchain.getFramebuffers()) {
             vkDestroyFramebuffer(device, framebuffer, nullptr);
         }
-
-        // Depth image
-        // vulkan::resources.get()
 
         vkDestroyImageView(device, vulkan::resources.getDepthImage().imageView, nullptr);
 
@@ -30,9 +26,6 @@ namespace renderer {
             vulkan::resources.getDepthImage().image,
             vulkan::resources.getDepthImage().allocation
         );
-
-        // Color image
-        // vulkan::resources.getvulkan::resources.getColorImage()()
 
         vkDestroyImageView(device, vulkan::resources.getColorImage().imageView, nullptr);
 

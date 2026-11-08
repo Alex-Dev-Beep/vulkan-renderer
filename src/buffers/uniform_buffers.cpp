@@ -62,10 +62,6 @@ namespace renderer {
         lastFrame = currentTime;
         deltaTime = glm::clamp(deltaTime, 0.0f, 0.1f);
 
-        // --------------------------------------------------
-        // CAMERA STATE
-        // --------------------------------------------------
-
         static glm::vec3 cameraPosition{2.0f, 2.0f, 2.0f};
 
         static float yaw = -135.0f;
@@ -82,10 +78,6 @@ namespace renderer {
 
         if (!window)
             throw std::runtime_error("[CAMERA] GLFW window is null!");
-
-        // --------------------------------------------------
-        // MOUSE INPUT
-        // --------------------------------------------------
 
         const bool rightPressed =
             glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_RIGHT) == GLFW_PRESS;
@@ -109,10 +101,6 @@ namespace renderer {
             std::cout << "[CAMERA] Mouse released\n";
         }
 
-        // --------------------------------------------------
-        // CAMERA DIRECTION
-        // --------------------------------------------------
-
         const glm::vec3 worldUp{0.0f, 1.0f, 0.0f};
 
         glm::vec3 cameraFront;
@@ -130,13 +118,8 @@ namespace renderer {
 
         cameraFront = glm::normalize(cameraFront);
 
-        // --------------------------------------------------
-        // CAMERA CONTROLS
-        // --------------------------------------------------
-
         if (rightPressed) {
 
-            // Mouse look
             double mouseX, mouseY;
 
             glfwGetCursorPos(window, &mouseX, &mouseY);
@@ -157,7 +140,6 @@ namespace renderer {
 
             pitch = glm::clamp(pitch, -89.0f, 89.0f);
 
-            // Recalculate camera direction
             cameraFront.x =
                 cos(glm::radians(yaw)) *
                 cos(glm::radians(pitch));
@@ -171,14 +153,9 @@ namespace renderer {
 
             cameraFront = glm::normalize(cameraFront);
 
-            // Camera right vector
             const glm::vec3 cameraRight = glm::normalize(
                 glm::cross(cameraFront, worldUp)
             );
-
-            // --------------------------------------------------
-            // MOVEMENT
-            // --------------------------------------------------
 
             float cameraSpeed = 3.0f;
 
@@ -187,31 +164,25 @@ namespace renderer {
 
             const float velocity = cameraSpeed * deltaTime;
 
-            // Forward / backward: EXACT camera direction
             if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
                 cameraPosition += cameraFront * velocity;
 
             if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
                 cameraPosition -= cameraFront * velocity;
 
-            // Left / right
             if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
                 cameraPosition -= cameraRight * velocity;
 
             if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
                 cameraPosition += cameraRight * velocity;
 
-            // Vertical world movement
             if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
                 cameraPosition += worldUp * velocity;
 
             if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS)
                 cameraPosition -= worldUp * velocity;
 
-            // --------------------------------------------------
-            // DEBUG
-            // --------------------------------------------------
-
+            
             if (currentTime - lastDebugPrint >=
                 std::chrono::milliseconds(250)) {
 
@@ -237,13 +208,9 @@ namespace renderer {
             }
         }
 
-        // --------------------------------------------------
-        // UNIFORM BUFFER OBJECT
-        // --------------------------------------------------
-
+        
         UniformBufferObject ubo{};
 
-        // Original model rotation
         static auto startTime = clock::now();
 
         const float time =
@@ -257,14 +224,12 @@ namespace renderer {
             glm::vec3(0.0f, 0.0f, 1.0f)
         );
 
-        // View
         ubo.view = glm::lookAt(
             cameraPosition,
             cameraPosition + cameraFront,
             worldUp
         );
 
-        // Projection
         const auto extent = vulkan::swapchain.getExtent();
 
         if (extent.width == 0 || extent.height == 0)
@@ -278,10 +243,6 @@ namespace renderer {
         );
 
         ubo.proj[1][1] *= -1;
-
-        // --------------------------------------------------
-        // WRITE UBO
-        // --------------------------------------------------
 
         if (currentImage >= uniformBuffersMapped.size())
             throw std::runtime_error("[UBO] Invalid current image index!");

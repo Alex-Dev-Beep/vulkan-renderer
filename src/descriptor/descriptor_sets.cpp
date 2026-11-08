@@ -77,7 +77,6 @@ namespace renderer {
 
             std::array<VkWriteDescriptorSet, 2> descriptorWrites{};
 
-            // Uniform buffer
             descriptorWrites[0].sType =
                 VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[0].dstSet = descriptorSets[i];
@@ -88,7 +87,6 @@ namespace renderer {
             descriptorWrites[0].descriptorCount = 1;
             descriptorWrites[0].pBufferInfo = &bufferInfo;
 
-            // Texture array
             descriptorWrites[1].sType =
                 VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorWrites[1].dstSet = descriptorSets[i];

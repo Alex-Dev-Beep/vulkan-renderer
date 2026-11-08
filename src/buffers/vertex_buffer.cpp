@@ -11,7 +11,6 @@ namespace renderer {
     void createVertexBuffer(mesh& model) {
         VkDeviceSize bufferSize = sizeof(model.vertices[0]) * model.vertices.size();
 
-        // Staging buffer
         VkBuffer stagingBuffer;
         VmaAllocation stagingAllocation;
 
@@ -23,7 +22,6 @@ namespace renderer {
             stagingAllocation
         );
 
-        // Copy vertex data to staging buffer
         void* data = nullptr;
 
         VkResult result = vmaMapMemory(
@@ -44,7 +42,6 @@ namespace renderer {
             stagingAllocation
         );
 
-        // Device-local vertex buffer
         vulkan::buffer.createBuffer(
             bufferSize,
             VK_BUFFER_USAGE_TRANSFER_DST_BIT |
@@ -54,14 +51,12 @@ namespace renderer {
             model.vertexBufferAllocation
         );
 
-        // Copy staging buffer to vertex buffer
         vulkan::buffer.copyBuffer(
             stagingBuffer,
             model.vertexBuffer,
             bufferSize
         );
 
-        // Destroy staging buffer
         vulkan::buffer.destroyBuffer(
             stagingBuffer,
             stagingAllocation
