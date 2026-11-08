@@ -2,7 +2,7 @@
 
 ### A 3D renderer built with Vulkan.
 
-<img width="849" height="705" alt="image" src="https://github.com/user-attachments/assets/7a48a9c6-6f6a-4b86-8b6c-1eeadb770417" />
+<img width="804" height="751" alt="image" src="https://github.com/user-attachments/assets/11a624f8-223b-4933-97e5-8bb90471bf9c" />
 
 #### Requirements:
 - CMake (build system generator)
